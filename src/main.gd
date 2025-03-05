@@ -30,20 +30,32 @@ extends Node
 var _board: TileMapLayer = $game/board as TileMapLayer
 
 @onready
+var _hotbar: Control = $gui/play/hotbar as Control
+
+@onready
+var _drag: CanvasLayer = $drag as CanvasLayer
+
+@onready
 var _tile: Tile = $game/tiles/tile as Tile
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	Input.set_default_cursor_shape()
+	_tile.drag_started.connect(_on_tile_drag_started.bind(_tile))
 	_tile.drag_stopped.connect(_on_tile_drag_stopped.bind(_tile))
 
+func _on_tile_drag_started(tile: Tile) -> void:
+	tile.reparent(_drag, true)
+	tile.reset_physics_interpolation()
+
 func _on_tile_drag_stopped(tile: Tile) -> void:
-	pass
 	# Snap to board grid.
 	# TODO: check if tile position is outside board bounds
 	# TODO: track tiles and check if a tile was already placed at coordinate
 	
+	tile.reparent(_board, true)
+	tile.reset_physics_interpolation()
 	var snap_coordinates: Vector2i = _board.local_to_map(_board.to_local(tile.global_position))
 	var snap_position: Vector2 = Vector2(snap_coordinates * _board.tile_set.tile_size)
 	snap_position = _board.global_transform * (snap_position - _board.position)

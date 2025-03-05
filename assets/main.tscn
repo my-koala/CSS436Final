@@ -2,12 +2,9 @@
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
+[ext_resource type="Script" uid="uid://jn8a64othr63" path="res://assets/game_camera.gd" id="2_j2eim"]
 [ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="3_2d37k"]
 [ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="4_836ik"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_836ik"]
-atlas = ExtResource("3_2d37k")
-region = Rect2(0, 0, 128, 0)
 
 [node name="main" type="Node"]
 script = ExtResource("1_db5cl")
@@ -16,8 +13,9 @@ script = ExtResource("1_db5cl")
 layer = 0
 follow_viewport_enabled = true
 
-[node name="camera_2d" type="Camera2D" parent="game"]
+[node name="game_camera" type="Camera2D" parent="game"]
 process_callback = 0
+script = ExtResource("2_j2eim")
 
 [node name="board" type="TileMapLayer" parent="game"]
 position = Vector2(-64, -64)
@@ -26,21 +24,30 @@ tile_set = ExtResource("2_06ig3")
 metadata/_edit_lock_ = true
 
 [node name="tiles" type="Node2D" parent="game"]
+y_sort_enabled = true
 
-[node name="tile" type="Sprite2D" parent="game/tiles"]
-position = Vector2(128, 0)
+[node name="tile" type="Node2D" parent="game/tiles"]
+script = ExtResource("4_836ik")
+
+[node name="sprite_2d" type="Sprite2D" parent="game/tiles/tile"]
 texture = ExtResource("3_2d37k")
 offset = Vector2(0, -64)
 region_enabled = true
 region_rect = Rect2(0, 0, 128, 256)
-script = ExtResource("4_836ik")
-locked = null
-pickable_rect = Rect2(-64, -80, 128, 128)
 
-[node name="texture_rect" type="TextureRect" parent="game/tiles"]
-offset_right = 40.0
-offset_bottom = 40.0
-texture = SubResource("AtlasTexture_836ik")
+[node name="pickable" type="Control" parent="game/tiles/tile"]
+layout_mode = 3
+anchor_left = 0.5
+anchor_top = 0.75
+anchor_right = 0.5
+anchor_bottom = 0.75
+offset_left = -64.0
+offset_top = -80.0
+offset_right = 64.0
+offset_bottom = 48.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
 
 [node name="gui" type="CanvasLayer" parent="."]
 
@@ -71,3 +78,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="drag" type="CanvasLayer" parent="."]
+layer = 2
+follow_viewport_enabled = true
