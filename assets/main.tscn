@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=7 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
 [ext_resource type="Script" uid="uid://jn8a64othr63" path="res://assets/game_camera.gd" id="2_j2eim"]
 [ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="3_2d37k"]
 [ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="4_836ik"]
+[ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
 
 [node name="main" type="Node"]
 script = ExtResource("1_db5cl")
@@ -82,3 +83,7 @@ grow_vertical = 2
 [node name="drag" type="CanvasLayer" parent="."]
 layer = 2
 follow_viewport_enabled = true
+
+[node name="network" type="Node" parent="."]
+script = ExtResource("6_ujfqy")
+metadata/_custom_type_script = "uid://b3eo1vdw04anx"

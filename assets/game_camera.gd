@@ -7,14 +7,10 @@ var _input_mouse: bool = false
 var _input_pan: bool = false
 var _input_pan_pivot: Vector2 = Vector2.ZERO
 
-var _input_zoom: float = 0.0
-
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint():
 		return
 	
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_WHEEL_DOWN):
-		_input_zoom
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if !_input_mouse:
 			_input_mouse = true
