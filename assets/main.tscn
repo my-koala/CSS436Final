@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=8 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
 [ext_resource type="Script" uid="uid://jn8a64othr63" path="res://assets/game_camera.gd" id="2_j2eim"]
 [ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="3_2d37k"]
 [ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="4_836ik"]
+[ext_resource type="Script" uid="uid://cftjoirlcfgqx" path="res://src/menu_network.gd" id="6_qdlv5"]
 [ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
 
 [node name="main" type="Node"]
@@ -79,6 +80,265 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="menu_network" type="Control" parent="gui"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_qdlv5")
+
+[node name="panel" type="Panel" parent="gui/menu_network"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.125
+anchor_right = 0.75
+anchor_bottom = 0.875
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="main" type="Control" parent="gui/menu_network/panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="label_header" type="Label" parent="gui/menu_network/panel/main"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 128.0
+offset_bottom = 195.0
+grow_horizontal = 2
+theme_type_variation = &"Header"
+text = "Network Configuration"
+horizontal_alignment = 1
+
+[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/main"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.5
+anchor_right = 0.75
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="button_host" type="Button" parent="gui/menu_network/panel/main/v_box_container"]
+layout_mode = 2
+text = "Host Server"
+
+[node name="button_join" type="Button" parent="gui/menu_network/panel/main/v_box_container"]
+layout_mode = 2
+text = "Join Server"
+
+[node name="host" type="Control" parent="gui/menu_network/panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="label_header" type="Label" parent="gui/menu_network/panel/host"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 128.0
+offset_bottom = 195.0
+grow_horizontal = 2
+theme_type_variation = &"Header"
+text = "Network Configuration
+- Host Server -"
+horizontal_alignment = 1
+
+[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/host"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.5
+anchor_right = 0.75
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="port" type="VBoxContainer" parent="gui/menu_network/panel/host/v_box_container"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="label_port" type="Label" parent="gui/menu_network/panel/host/v_box_container/port"]
+layout_mode = 2
+text = "Server Port:"
+
+[node name="line_edit_port" type="LineEdit" parent="gui/menu_network/panel/host/v_box_container/port"]
+layout_mode = 2
+placeholder_text = "Port (default: 43517)"
+max_length = 10
+context_menu_enabled = false
+emoji_menu_enabled = false
+
+[node name="button_host" type="Button" parent="gui/menu_network/panel/host/v_box_container"]
+layout_mode = 2
+text = "Host Server"
+
+[node name="button_back" type="Button" parent="gui/menu_network/panel/host/v_box_container"]
+layout_mode = 2
+text = "Back"
+
+[node name="join" type="Control" parent="gui/menu_network/panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="label_header" type="Label" parent="gui/menu_network/panel/join"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 128.0
+offset_bottom = 195.0
+grow_horizontal = 2
+theme_type_variation = &"Header"
+text = "Network Configuration
+- Join Server -"
+horizontal_alignment = 1
+
+[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/join"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.5
+anchor_right = 0.75
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="address" type="VBoxContainer" parent="gui/menu_network/panel/join/v_box_container"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="label_address" type="Label" parent="gui/menu_network/panel/join/v_box_container/address"]
+layout_mode = 2
+text = "Server Address:"
+
+[node name="line_edit_address" type="LineEdit" parent="gui/menu_network/panel/join/v_box_container/address"]
+layout_mode = 2
+placeholder_text = "Address"
+max_length = 10
+context_menu_enabled = false
+emoji_menu_enabled = false
+
+[node name="port" type="VBoxContainer" parent="gui/menu_network/panel/join/v_box_container"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="label_port" type="Label" parent="gui/menu_network/panel/join/v_box_container/port"]
+layout_mode = 2
+text = "Server Port:"
+
+[node name="line_edit_port" type="LineEdit" parent="gui/menu_network/panel/join/v_box_container/port"]
+layout_mode = 2
+placeholder_text = "Port (default: 43517)"
+max_length = 10
+context_menu_enabled = false
+emoji_menu_enabled = false
+
+[node name="button_join" type="Button" parent="gui/menu_network/panel/join/v_box_container"]
+layout_mode = 2
+text = "Join Server"
+
+[node name="button_back" type="Button" parent="gui/menu_network/panel/join/v_box_container"]
+layout_mode = 2
+text = "Back"
+
+[node name="status" type="Control" parent="gui/menu_network/panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="label_header" type="Label" parent="gui/menu_network/panel/status"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 128.0
+offset_bottom = 195.0
+grow_horizontal = 2
+theme_type_variation = &"Header"
+text = "Network Configuration
+- Network Status -"
+horizontal_alignment = 1
+
+[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/status"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.5
+anchor_right = 0.75
+anchor_bottom = 0.75
+offset_top = -101.75
+offset_bottom = 101.75
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="label_status" type="Label" parent="gui/menu_network/panel/status/v_box_container"]
+layout_mode = 2
+text = "Status"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="button_back" type="Button" parent="gui/menu_network/panel/status/v_box_container"]
+layout_mode = 2
+text = "Back"
+
+[node name="test" type="Control" parent="gui"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="line_edit" type="LineEdit" parent="gui/test"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 230.0
+offset_right = 296.0
+offset_bottom = 283.0
+text = "foo"
+
+[node name="button_reliable" type="Button" parent="gui/test"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 327.0
+offset_right = 476.0
+offset_bottom = 380.0
+text = "send reliable message (TCP)"
+
+[node name="button_unreliable" type="Button" parent="gui/test"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 432.0
+offset_right = 526.0
+offset_bottom = 485.0
+text = "send unreliable message (UDP)"
 
 [node name="drag" type="CanvasLayer" parent="."]
 layer = 2

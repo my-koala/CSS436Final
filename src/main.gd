@@ -31,6 +31,9 @@ extends Node
 # lobby (main menu)
 #   players joining, show list of players
 
+const DEFAULT_SERVER_PORT: int = 43517
+const DEFAULT_SERVER_ADDRESS: String = "127.0.0.1"
+
 @onready
 var _board: TileMapLayer = $game/board as TileMapLayer
 
@@ -44,18 +47,44 @@ var _drag: CanvasLayer = $drag as CanvasLayer
 var _tile: Tile = $game/tiles/tile as Tile
 
 @onready
+var _menu_network: MenuNetwork = $gui/menu_network as MenuNetwork
+
+@onready
 var _network: Network = $network as Network
+
+# test
+@onready
+var _test_line_edit: LineEdit = $gui/test/line_edit as LineEdit
+@onready
+var _test_button_reliable: Button = $gui/test/button_reliable as Button
+@onready
+var _test_button_unreliable: Button = $gui/test/button_unreliable as Button
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	
+	_test_button_reliable.pressed.connect(_on_test_button_reliable_pressed)
+	_test_button_unreliable.pressed.connect(_on_test_button_unreliable_pressed)
+	
+	multiplayer.peer_connected.connect(_on_multiplayer_peer_connected)
+	multiplayer.peer_disconnected.connect(_on_multiplayer_peer_disconnected)
+	multiplayer.server_disconnected.connect(_on_multiplayer_server_disconnected)
+	multiplayer.connected_to_server.connect(_on_multiplayer_connected_to_server)
+	multiplayer.connection_failed.connect(_on_multiplayer_connection_failed)
+	
+	_menu_network.host_request.connect(_on_menu_network_host_request)
+	_menu_network.join_request.connect(_on_menu_network_join_request)
+	_menu_network.stop_request.connect(_on_menu_network_stop_request)
+	_menu_network.set_state(MenuNetwork.State.MAIN)
+	
 	Input.set_default_cursor_shape()
 	_tile.drag_started.connect(_on_tile_drag_started.bind(_tile))
 	_tile.drag_stopped.connect(_on_tile_drag_stopped.bind(_tile))
 	
 	# Process command line arguments.
 	var args: Dictionary[String, String] = {}
-	var args_raw: PackedStringArray = OS.get_cmdline_args()
+	var args_raw: PackedStringArray = OS.get_cmdline_user_args()
 	for arg_raw: String in args_raw:
 		var split: int = arg_raw.find("=")
 		var key: String = arg_raw.substr(0, split).trim_prefix("--")
@@ -64,30 +93,64 @@ func _ready() -> void:
 		else:
 			args[key] = ""
 	
-	var is_server: bool = false
-	var server_address: String = ""
-	if args.has("is_server"):
-		if args["is_server"].to_lower() == "true":
-			is_server = true
-		elif args["is_server"].to_lower() == "false":
-			is_server = false
-	if args.has("server_address"):
-		server_address = args["server_address"]
+	var network_configured: bool = false
+	var server: bool = false
 	
-	multiplayer.peer_connected.connect(_on_multiplayer_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_multiplayer_peer_disconnected)
-	multiplayer.server_disconnected.connect(_on_multiplayer_server_disconnected)
-	multiplayer.connected_to_server.connect(_on_multiplayer_connected_to_server)
-	multiplayer.connection_failed.connect(_on_multiplayer_connection_failed)
+	var address: String = DEFAULT_SERVER_ADDRESS
+	var port: int = DEFAULT_SERVER_PORT
 	
-	if is_server:
-		_network.host_server()
-	else:
-		_network.join_server(server_address)
+	if args.has("server"):
+		print("found server arg")
+		server = args["server"].to_lower() == "true"
+		network_configured = true
+	if args.has("address"):
+		address = args["address"]
+	if args.has("port"):
+		port = args["port"].to_int()
+	
+	if network_configured:
+		_menu_network.set_state(MenuNetwork.State.NONE)
+		if server:
+			_network.host_server(port)
+		else:
+			_network.join_server(address, port)
 
-func _process(delta: float) -> void:
-	if Engine.is_editor_hint():
-		return
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _message_reliable(message: String) -> void:
+	print("%d: Received reliable message from peer %d: %s" % [multiplayer.get_unique_id(), multiplayer.get_remote_sender_id(), message])
+
+@rpc("any_peer", "call_remote", "unreliable", 0)
+func _message_unreliable(message: String) -> void:
+	print("%d: Received unreliable message from peer %d: %s" % [multiplayer.get_unique_id(), multiplayer.get_remote_sender_id(), message])
+
+func _on_test_button_reliable_pressed() -> void:
+	if multiplayer.has_multiplayer_peer():
+		_message_reliable.rpc(_test_line_edit.text)
+
+func _on_test_button_unreliable_pressed() -> void:
+	if multiplayer.has_multiplayer_peer():
+		_message_unreliable.rpc(_test_line_edit.text)
+
+func _on_menu_network_host_request(port: int) -> void:
+	if port == 0:
+		_network.host_server(DEFAULT_SERVER_PORT)
+	else:
+		_network.host_server(port)
+
+func _on_menu_network_join_request(address: String, port: int) -> void:
+	if address.is_empty():
+		_network.join_server(DEFAULT_SERVER_ADDRESS, DEFAULT_SERVER_PORT)
+	elif port == 0:
+		_network.join_server(address, DEFAULT_SERVER_PORT)
+	else:
+		_network.join_server(address, port)
+
+func _on_menu_network_stop_request() -> void:
+	if _network.is_active():
+		if _network.is_server():
+			_network.stop_server()
+		else:
+			_network.quit_server()
 
 func _on_tile_drag_started(tile: Tile) -> void:
 	tile.reparent(_drag, true)
@@ -109,6 +172,7 @@ var _peer_instances: Array[Node] = []
 
 func _on_multiplayer_peer_connected(peer_id: int) -> void:
 	print("%d: peer connected: %d" % [multiplayer.get_unique_id(), peer_id])
+	pass
 
 func _on_multiplayer_peer_disconnected(peer_id: int) -> void:
 	print("%d: peer disconnected: %d" % [multiplayer.get_unique_id(), peer_id])
@@ -127,9 +191,15 @@ func _on_multiplayer_server_disconnected() -> void:
 	for peer_instance: Node in _peer_instances:
 		peer_instance.queue_free()
 	_peer_instances.clear()
+	
+	_menu_network.set_state(MenuNetwork.State.STATUS)
 
 func _on_multiplayer_connected_to_server() -> void:
-	print("%d: connected to server" % [multiplayer.get_unique_id()])
+	#print("%d: connected to server" % [multiplayer.get_unique_id()])
+	
+	_menu_network.set_state(MenuNetwork.State.NONE)
 
 func _on_multiplayer_connection_failed() -> void:
-	print("%d: failed to connect to server" % [multiplayer.get_unique_id()])
+	#print("%d: failed to connect to server" % [multiplayer.get_unique_id()])
+	
+	_menu_network.set_state(MenuNetwork.State.STATUS)

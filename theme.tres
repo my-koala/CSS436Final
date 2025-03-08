@@ -1,0 +1,11 @@
+[gd_resource type="Theme" format=3 uid="uid://dl5kok5wd56ae"]
+
+[resource]
+Button/font_sizes/font_size = 32
+HBoxContainer/constants/separation = 16
+Header/base_type = &"Label"
+Header/font_sizes/font_size = 48
+Label/font_sizes/font_size = 32
+LineEdit/font_sizes/font_size = 32
+TextEdit/font_sizes/font_size = 32
+VBoxContainer/constants/separation = 32
