@@ -21,6 +21,8 @@ signal client_stopped()
 signal server_started()
 signal server_stopped()
 
+signal _client_updated(connected: bool)
+
 enum Mode {
 	NONE,
 	CLIENT,
@@ -33,7 +35,8 @@ enum State {
 	LOBBY,
 	PLAY,
 }
-var _state: State = State.NONE
+var _state_curr: State = State.NONE
+var _state_prev: State = State.NONE
 
 @onready
 var _network: Network = $network as Network
@@ -51,6 +54,15 @@ var _tile_rack: TileRack = $gui/play/tile_rack as TileRack
 
 @onready
 var _drag: CanvasLayer = $drag as CanvasLayer
+
+@onready
+var _world: Node2D = $world as Node2D
+
+@onready
+var _gui_play: Control = $gui/play as Control
+
+@onready
+var _gui_lobby: Control = $gui/lobby as Control
 
 @rpc("authority", "call_remote", "reliable", 0)
 func _rpc_set_game_state(state: int) -> void:
@@ -176,39 +188,30 @@ func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_multiplayer_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_multiplayer_peer_disconnected)
 	multiplayer.server_disconnected.connect(_on_multiplayer_server_disconnected)
-	multiplayer.connected_to_server.connect(_on_multiplayer_connected_to_server)
-	multiplayer.connection_failed.connect(_on_multiplayer_connection_failed)
-	
-	# TEMP
-	_game_timer.set_turn(2)
-	_game_timer.set_time(256.0)
 
-func _on_multiplayer_peer_connected(peer_id: int) -> void:
-	print("%d: peer connected: %d" % [multiplayer.get_unique_id(), peer_id])
+func _on_multiplayer_peer_connected(player_id: int) -> void:
+	print("%d: peer connected: %d" % [multiplayer.get_unique_id(), player_id])
+	if is_multiplayer_authority():
+		_rpc_set_state.rpc_id(player_id, _state_curr)
 
-func _on_multiplayer_peer_disconnected(peer_id: int) -> void:
-	print("%d: peer disconnected: %d" % [multiplayer.get_unique_id(), peer_id])
+func _on_multiplayer_peer_disconnected(player_id: int) -> void:
+	print("%d: peer disconnected: %d" % [multiplayer.get_unique_id(), player_id])
 
 func _on_multiplayer_server_disconnected() -> void:
-	_mode = Mode.NONE
-
-func _on_multiplayer_connected_to_server() -> void:
-	pass
-
-func _on_multiplayer_connection_failed() -> void:
-	_mode = Mode.NONE
+	_set_state(State.NONE)
 
 func is_active() -> bool:
 	return _mode != Mode.NONE
 
 func start_client(address: String, port: int, player_name: String = "Player") -> bool:
-	if _network.join_server(address, port) != OK:
+	if await _network.join_server(address, port) != OK:
 		return false
 	
 	_game_players.set_local_player_name(player_name)
 	_game_players.set_local_player_spectator(false)
 	
 	_mode = Mode.CLIENT
+	_set_state(State.LOBBY)
 	client_started.emit()
 	return true
 
@@ -220,6 +223,7 @@ func start_server(port: int, spectator: bool = true, player_name: String = "Host
 	_game_players.set_local_player_spectator(spectator)
 	
 	_mode = Mode.SERVER
+	_set_state(State.LOBBY)
 	server_started.emit()
 	return true
 
@@ -232,9 +236,38 @@ func stop() -> void:
 			# though much of reset would be through rpcs and multiplayer callbacks?
 			_network.quit_server()
 			_mode = Mode.NONE
+			_set_state(State.NONE)
 		Mode.SERVER:
 			_network.stop_server()
 			_mode = Mode.NONE
+			_set_state(State.NONE)
+
+@rpc("authority", "call_remote", "reliable", 1)
+func _rpc_set_state(state: State) -> void:
+	_set_state(state)
+
+func _set_state(state: State) -> void:
+	if _state_curr == state:
+		return
+	_state_curr = state
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		_rpc_set_state.rpc(_state_curr)
+	
+	match _state_curr:
+		State.NONE:
+			_world.visible = false
+			_gui_lobby.visible = false
+			_gui_play.visible = false
+		State.LOBBY:
+			_world.visible = false
+			_gui_lobby.visible = true
+			_gui_play.visible = false
+		State.PLAY:
+			_world.visible = true
+			_gui_lobby.visible = false
+			_gui_play.visible = true
+
+var _temp_timer: float = 0.0
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -244,23 +277,23 @@ func _physics_process(delta: float) -> void:
 		Mode.NONE:
 			pass
 		Mode.CLIENT:
-			match _state:
-				State.NONE:
-					_state = State.LOBBY
+			match _state_curr:
 				State.LOBBY:
 					pass
 				State.PLAY:
 					pass
 		Mode.SERVER:
-			match _state:
-				State.NONE:
-					_state = State.LOBBY
+			match _state_curr:
 				State.LOBBY:
 					# TODO: check if all players are ready, start play
-					if false:
-						_state = State.PLAY
+					if _game_players.get_all_players_ready():
+						_game_players.set_all_players_ready(false)
+						_set_state(State.PLAY)
 				State.PLAY:
-					pass
+					_temp_timer += delta
+					if _temp_timer > 3.0:
+						_set_state(State.LOBBY)
+						_temp_timer = 0.0
 
 #func _on_tile_drag_started(tile: Tile) -> void:
 	#if _tile_rack.has_tile(tile):

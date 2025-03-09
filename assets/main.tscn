@@ -104,7 +104,6 @@ grow_horizontal = 2
 grow_vertical = 0
 color = Color(0.570611, 0.375719, 0.372228, 1)
 script = ExtResource("7_vqaxa")
-tile_size = null
 
 [node name="tile" type="Node2D" parent="game/game/gui/play/tile_rack"]
 script = ExtResource("4_836ik")

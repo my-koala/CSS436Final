@@ -2,7 +2,8 @@
 extends Control
 class_name MenuConfig
 
-signal network_join_request(address: String, port: int)
+signal player_name_submitted(player_name: String)
+signal network_join_request()
 
 enum State {
 	NONE,
@@ -46,6 +47,7 @@ func get_network_port() -> int:
 func set_network_details(address: String, port: int, auto_connect: bool = false) -> void:
 	_network_line_edit_address.text = address
 	_network_line_edit_port.text = str(port)
+	_auto_connect = auto_connect
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -59,6 +61,7 @@ func _ready() -> void:
 func _on_name_button_submit_pressed() -> void:
 	if GamePlayers.is_valid_player_name(get_player_name()):
 		set_state(State.NETWORK)
+		player_name_submitted.emit()
 
 func _on_join_line_edit_port_text_changed(new_text: String) -> void:
 	if !new_text.is_empty() && (!new_text.is_valid_int() || new_text[0] == "+" || new_text[0] == "-"):
@@ -69,7 +72,7 @@ func _on_join_line_edit_port_text_changed(new_text: String) -> void:
 func _on_network_button_join_pressed() -> void:
 	var address: String = _network_line_edit_address.text
 	var port: int = _network_line_edit_port.text.to_int()
-	network_join_request.emit(get_network_address(), get_network_port())
+	network_join_request.emit()
 
 func set_state(state: State) -> void:
 	_state = state

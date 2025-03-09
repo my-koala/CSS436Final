@@ -21,6 +21,9 @@ var multiplayer_root: Node = null
 
 var _multiplayer_api: SceneMultiplayer = SceneMultiplayer.new()
 
+func _ready() -> void:
+	_multiplayer_api.multiplayer_peer = null
+
 func _enter_tree() -> void:
 	if Engine.is_editor_hint():
 		return
@@ -46,6 +49,9 @@ func is_active() -> bool:
 
 func is_server() -> bool:
 	return _multiplayer_api.has_multiplayer_peer() && _multiplayer_api.is_server()
+
+func is_client() -> bool:
+	return _multiplayer_api.has_multiplayer_peer() && !_multiplayer_api.is_server()
 
 ## Starts server (leave default arguments for offline).
 ## Returns OK if successfully created server.
@@ -86,7 +92,9 @@ func stop_server() -> Error:
 	print("Network | Stopped server.")
 	return OK
 
-## Creates client and starts connection to a server.
+signal _connection_updated()
+
+## Asynchronously creates client and starts connection to a server.
 ## Returns OK if successfully created client.
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if client could not be created.
@@ -101,19 +109,21 @@ func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
 	var multiplayer_peer: WebSocketMultiplayerPeer = WebSocketMultiplayerPeer.new()
 	
 	var error: Error = multiplayer_peer.create_client(address + ":" + str(port), null)
-	if error == OK:
-		_multiplayer_api.multiplayer_peer = multiplayer_peer
-		match _multiplayer_api.multiplayer_peer.get_connection_status():
-			MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTED:
-				print("Network | Joined server '%s:%d'." % [address, port])
-			MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTING:
-				print("Network | Joining server '%s:%d' ..." % [address, port])
-			MultiplayerPeer.ConnectionStatus.CONNECTION_DISCONNECTED:
-				push_error("Network | Failed to join server '%s:%d': disconnected." % [address, port])
-				_multiplayer_api.multiplayer_peer.close()
-				error = ERR_CANT_CONNECT
-	else:
+	if error != OK:
 		push_error("Network | Failed to join server '%s:%d': could not connect." % [address, port])
+		return error
+	
+	_multiplayer_api.multiplayer_peer = multiplayer_peer
+	while _multiplayer_api.multiplayer_peer.get_connection_status() == MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTING:
+		await get_tree().physics_frame
+	
+	if _multiplayer_api.multiplayer_peer.get_connection_status() != MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTED:
+		push_error("Network | Failed to join server '%s:%d': disconnected." % [address, port])
+		_multiplayer_api.multiplayer_peer.close()
+		_multiplayer_api.set_deferred(&"multiplayer_peer", null)
+		return ERR_CANT_CONNECT
+	
+	print("Network | Joined server '%s:%d'." % [address, port])
 	return error
 
 ## Stops client and disconnects from server.
@@ -129,14 +139,3 @@ func quit_server() -> Error:
 	_multiplayer_api.multiplayer_peer.close()
 	print("Network | Disconnected from server.")
 	return OK
-
-func _ready() -> void:
-	_multiplayer_api.multiplayer_peer = null
-	_multiplayer_api.server_disconnected.connect(_on_multiplayer_server_disconnected)
-	_multiplayer_api.connection_failed.connect(_on_multiplayer_connection_failed)
-
-func _on_multiplayer_server_disconnected() -> void:
-	_multiplayer_api.set_deferred(&"multiplayer_peer", null)
-
-func _on_multiplayer_connection_failed() -> void:
-	_multiplayer_api.set_deferred(&"multiplayer_peer", null)

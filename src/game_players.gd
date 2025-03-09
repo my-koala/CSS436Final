@@ -69,7 +69,6 @@ func _set_player_name(player_id: int, player_name: String) -> bool:
 	
 	var player: Player = _get_player(player_id)
 	if !is_instance_valid(player):
-		print("could not find: " + str(player_id))
 		return false
 	
 	player.name = player_name
@@ -87,7 +86,6 @@ func _rpc_set_player_name_request(player_name: String) -> void:
 		_rpc_set_player_name.rpc(player_id, player_name)
 
 #endregion
-
 #region Player Ready
 
 func get_local_player_ready() -> bool:
@@ -97,6 +95,23 @@ func set_local_player_ready(player_ready: bool) -> void:
 	_local_player.ready = player_ready
 	if multiplayer.has_multiplayer_peer() && !is_multiplayer_authority() && multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
 		_rpc_set_player_ready_request.rpc_id(get_multiplayer_authority(), player_ready)
+
+func get_all_players_ready() -> bool:
+	if _players.is_empty() && _local_player.spectator:
+		return false
+	if !_local_player.spectator && !_local_player.ready:
+		return false
+	for player: Player in _players:
+		if !player.spectator && !player.ready:
+			return false
+	return true
+
+func set_all_players_ready(player_ready: bool) -> void:
+	set_local_player_ready(player_ready)
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		for player_id: int in get_player_ids():
+			_set_player_ready(player_id, player_ready)
+			_rpc_set_player_ready.rpc(player_id, player_ready)
 
 func get_player_ready(player_id: int) -> bool:
 	var player: Player = _get_player(player_id)

@@ -51,8 +51,6 @@ var _game: Game = $game/game as Game
 const TIMEOUT: float = 300.0
 var _timeout: float = 0.0
 
-var _auto_connect: bool = false
-
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
@@ -77,11 +75,13 @@ func _ready() -> void:
 	
 	var server: bool = false
 	
+	var auto_connect: bool = false
 	var address: String = DEFAULT_SERVER_ADDRESS
 	var port: int = DEFAULT_SERVER_PORT
 	
+	if args.has("auto-connect"):
+		auto_connect = true
 	if args.has("address"):
-		_auto_connect = true
 		address = args["address"]
 	if args.has("server"):
 		server = true
@@ -94,7 +94,7 @@ func _ready() -> void:
 		
 		_menu_config.set_state(MenuConfig.State.NONE)
 	else:
-		_menu_config.set_network_details(address, port, true)
+		_menu_config.set_network_details(address, port, auto_connect)
 		_menu_config.set_state(MenuConfig.State.NAME)
 
 func _on_game_server_started() -> void:
@@ -109,7 +109,7 @@ func _on_game_client_started() -> void:
 func _on_game_client_stopped() -> void:
 	_menu_config.set_state(MenuConfig.State.NETWORK)
 
-func _on_menu_config_network_join_request(address: String, port: int) -> void:
+func _on_menu_config_network_join_request() -> void:
 	_game.start_client(_menu_config.get_network_address(), _menu_config.get_network_port(), _menu_config.get_player_name())
 
 func set_state(state: State) -> void:
