@@ -90,6 +90,7 @@ func stop_server() -> Error:
 ## Returns OK if successfully created client.
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if client could not be created.
+## Returns ERR_CANT_CONNECT if client could not connect.
 func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
 	# Return error if a connection is currently active.
 	if _multiplayer_api.has_multiplayer_peer():
@@ -102,7 +103,15 @@ func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
 	var error: Error = multiplayer_peer.create_client(address + ":" + str(port), null)
 	if error == OK:
 		_multiplayer_api.multiplayer_peer = multiplayer_peer
-		print("Network | Joined server '%s:%d'." % [address, port])
+		match _multiplayer_api.multiplayer_peer.get_connection_status():
+			MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTED:
+				print("Network | Joined server '%s:%d'." % [address, port])
+			MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTING:
+				print("Network | Joining server '%s:%d' ..." % [address, port])
+			MultiplayerPeer.ConnectionStatus.CONNECTION_DISCONNECTED:
+				push_error("Network | Failed to join server '%s:%d': disconnected." % [address, port])
+				_multiplayer_api.multiplayer_peer.close()
+				error = ERR_CANT_CONNECT
 	else:
 		push_error("Network | Failed to join server '%s:%d': could not connect." % [address, port])
 	return error

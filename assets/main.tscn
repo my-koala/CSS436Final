@@ -1,12 +1,19 @@
-[gd_scene load_steps=8 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=15 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
+[ext_resource type="Script" uid="uid://c6hl88o0btr7v" path="res://src/game.gd" id="2_fphxj"]
 [ext_resource type="Script" uid="uid://jn8a64othr63" path="res://assets/game_camera.gd" id="2_j2eim"]
 [ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="3_2d37k"]
+[ext_resource type="Script" uid="uid://c7y3iqwrjfr06" path="res://src/game_players.gd" id="3_h4xlo"]
 [ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="4_836ik"]
-[ext_resource type="Script" uid="uid://cftjoirlcfgqx" path="res://src/menu_network.gd" id="6_qdlv5"]
+[ext_resource type="Script" uid="uid://b2ot00vang7bj" path="res://src/tile_board.gd" id="5_m5usj"]
 [ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
+[ext_resource type="Script" uid="uid://3fibd4vboth" path="res://src/tile_rack.gd" id="7_vqaxa"]
+[ext_resource type="Script" uid="uid://do3qity78vjh4" path="res://src/game_timer.gd" id="8_otm8r"]
+[ext_resource type="Script" uid="uid://dev6hqla35dfo" path="res://src/menu_config.gd" id="11_vvw4a"]
+[ext_resource type="Script" uid="uid://dj7hgnj0r1l15" path="res://src/game_player_list.gd" id="12_h4xlo"]
+[ext_resource type="Script" uid="uid://b4nfwx1s7rb5s" path="res://src/game_button_ready.gd" id="13_vvw4a"]
 
 [node name="main" type="Node"]
 script = ExtResource("1_db5cl")
@@ -15,29 +22,42 @@ script = ExtResource("1_db5cl")
 layer = 0
 follow_viewport_enabled = true
 
-[node name="game_camera" type="Camera2D" parent="game"]
+[node name="game" type="Node" parent="game"]
+script = ExtResource("2_fphxj")
+
+[node name="network" type="Node" parent="game/game"]
+script = ExtResource("6_ujfqy")
+metadata/_custom_type_script = "uid://b3eo1vdw04anx"
+
+[node name="game_players" type="Node" parent="game/game"]
+script = ExtResource("3_h4xlo")
+
+[node name="world" type="Node2D" parent="game/game"]
+
+[node name="game_camera" type="Camera2D" parent="game/game/world"]
 process_callback = 0
 script = ExtResource("2_j2eim")
 
-[node name="board" type="TileMapLayer" parent="game"]
+[node name="tile_board" type="TileMapLayer" parent="game/game/world"]
 position = Vector2(-64, -64)
 tile_map_data = PackedByteArray("AAD9//3/AAAAAAAAAAD9//7/AAAAAAEAAAD9////AAAAAAAAAAD9/wAAAAAAAAAAAAD9/wEAAAAAAAAAAAD9/wIAAAAAAAEAAAD9/wMAAAAAAAAAAAD+//3/AAAAAAEAAAD+//7/AAAAAAAAAAD+////AAAAAAAAAAD+/wAAAAAAAAEAAAD+/wEAAAAAAAAAAAD+/wIAAAAAAAAAAAD+/wMAAAAAAAEAAAD///3/AAAAAAAAAAD///7/AAAAAAAAAAD/////AAABAAAAAAD//wAAAAAAAAAAAAD//wEAAAABAAAAAAD//wIAAAAAAAAAAAD//wMAAAAAAAAAAAAAAP3/AAAAAAAAAAAAAP7/AAAAAAAAAAAAAP//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAABAP3/AAAAAAAAAAABAP7/AAAAAAAAAAABAP//AAABAAAAAAABAAAAAAAAAAAAAAABAAEAAAABAAAAAAABAAIAAAAAAAAAAAABAAMAAAAAAAAAAAACAP3/AAAAAAEAAAACAP7/AAAAAAAAAAACAP//AAAAAAAAAAACAAAAAAAAAAEAAAACAAEAAAAAAAAAAAACAAIAAAAAAAAAAAACAAMAAAAAAAEAAAADAP3/AAAAAAAAAAADAP7/AAAAAAEAAAADAP//AAAAAAAAAAADAAAAAAAAAAAAAAADAAEAAAAAAAAAAAADAAIAAAAAAAEAAAADAAMAAAAAAAAAAAA=")
 tile_set = ExtResource("2_06ig3")
+script = ExtResource("5_m5usj")
 metadata/_edit_lock_ = true
 
-[node name="tiles" type="Node2D" parent="game"]
+[node name="tiles" type="Node2D" parent="game/game/world"]
 y_sort_enabled = true
 
-[node name="tile" type="Node2D" parent="game/tiles"]
+[node name="tile" type="Node2D" parent="game/game/world/tiles"]
 script = ExtResource("4_836ik")
 
-[node name="sprite_2d" type="Sprite2D" parent="game/tiles/tile"]
+[node name="sprite_2d" type="Sprite2D" parent="game/game/world/tiles/tile"]
 texture = ExtResource("3_2d37k")
 offset = Vector2(0, -64)
 region_enabled = true
 region_rect = Rect2(0, 0, 128, 256)
 
-[node name="pickable" type="Control" parent="game/tiles/tile"]
+[node name="pickable" type="Control" parent="game/game/world/tiles/tile"]
 layout_mode = 3
 anchor_left = 0.5
 anchor_top = 0.75
@@ -50,10 +70,11 @@ offset_bottom = 48.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
+metadata/_edit_use_anchors_ = true
 
-[node name="gui" type="CanvasLayer" parent="."]
+[node name="gui" type="CanvasLayer" parent="game/game"]
 
-[node name="play" type="Control" parent="gui"]
+[node name="play" type="Control" parent="game/game/gui"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -62,7 +83,17 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="hotbar" type="ColorRect" parent="gui/play"]
+[node name="game_timer" type="Label" parent="game/game/gui/play"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 45.0
+grow_horizontal = 2
+text = "Turn ## | Time Left: ##"
+horizontal_alignment = 1
+script = ExtResource("8_otm8r")
+
+[node name="tile_rack" type="ColorRect" parent="game/game/gui/play"]
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 1.0
@@ -72,74 +103,150 @@ offset_top = -128.0
 grow_horizontal = 2
 grow_vertical = 0
 color = Color(0.570611, 0.375719, 0.372228, 1)
+script = ExtResource("7_vqaxa")
+tile_size = null
 
-[node name="tile_container" type="HBoxContainer" parent="gui/play/hotbar"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="tile" type="Node2D" parent="game/game/gui/play/tile_rack"]
+script = ExtResource("4_836ik")
+
+[node name="sprite_2d" type="Sprite2D" parent="game/game/gui/play/tile_rack/tile"]
+texture = ExtResource("3_2d37k")
+offset = Vector2(0, -64)
+region_enabled = true
+region_rect = Rect2(0, 0, 128, 256)
+
+[node name="pickable" type="Control" parent="game/game/gui/play/tile_rack/tile"]
+layout_mode = 3
+anchor_left = 0.5
+anchor_top = 0.75
+anchor_right = 0.5
+anchor_bottom = 0.75
+offset_left = -64.0
+offset_top = -80.0
+offset_right = 64.0
+offset_bottom = 48.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_default_cursor_shape = 2
+metadata/_edit_use_anchors_ = true
 
-[node name="menu_network" type="Control" parent="gui"]
+[node name="control" type="Control" parent="game/game/gui/play"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 492.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="lobby" type="Control" parent="game/game/gui"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("6_qdlv5")
 
-[node name="panel" type="Panel" parent="gui/menu_network"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.25
-anchor_top = 0.125
-anchor_right = 0.75
-anchor_bottom = 0.875
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="main" type="Control" parent="gui/menu_network/panel"]
+[node name="color_rect" type="ColorRect" parent="game/game/gui/lobby"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.623331, 0.594586, 0.585371, 1)
 
-[node name="label_header" type="Label" parent="gui/menu_network/panel/main"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 128.0
-offset_bottom = 195.0
-grow_horizontal = 2
-theme_type_variation = &"Header"
-text = "Network Configuration"
-horizontal_alignment = 1
-
-[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/main"]
+[node name="panel_players" type="Panel" parent="game/game/gui/lobby"]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.25
-anchor_top = 0.5
-anchor_right = 0.75
-anchor_bottom = 0.75
+anchor_left = 0.625
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-alignment = 1
 
-[node name="button_host" type="Button" parent="gui/menu_network/panel/main/v_box_container"]
+[node name="scroll_container" type="ScrollContainer" parent="game/game/gui/lobby/panel_players"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="game_player_list" type="RichTextLabel" parent="game/game/gui/lobby/panel_players/scroll_container" node_paths=PackedStringArray("game_players")]
 layout_mode = 2
-text = "Host Server"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "<player list>
+"
+script = ExtResource("12_h4xlo")
+game_players = NodePath("../../../../../game_players")
 
-[node name="button_join" type="Button" parent="gui/menu_network/panel/main/v_box_container"]
+[node name="label_ready" type="RichTextLabel" parent="game/game/gui/lobby/panel_players/scroll_container/game_player_list"]
 layout_mode = 2
-text = "Join Server"
+offset_right = 560.0
+offset_bottom = 864.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "<ready>
+"
+horizontal_alignment = 2
 
-[node name="host" type="Control" parent="gui/menu_network/panel"]
+[node name="game_button_ready" type="Button" parent="game/game/gui/lobby" node_paths=PackedStringArray("game_players")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 220.0
+offset_top = -303.0
+offset_right = 988.0
+offset_bottom = -47.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 72
+text = "Click to READY"
+script = ExtResource("13_vvw4a")
+game_players = NodePath("../../../game_players")
+
+[node name="drag" type="CanvasLayer" parent="game/game"]
+layer = 2
+follow_viewport_enabled = true
+
+[node name="gui" type="CanvasLayer" parent="."]
+layer = 4
+
+[node name="menu_config" type="Control" parent="gui"]
 visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("11_vvw4a")
+
+[node name="color_rect" type="ColorRect" parent="gui/menu_config"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.623331, 0.594586, 0.585371, 1)
+
+[node name="name" type="Control" parent="gui/menu_config"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -147,19 +254,75 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="label_header" type="Label" parent="gui/menu_network/panel/host"]
+[node name="label" type="Label" parent="gui/menu_config/name"]
 layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 128.0
-offset_bottom = 195.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -299.5
+offset_top = -44.0
+offset_right = 299.5
+offset_bottom = 44.0
 grow_horizontal = 2
-theme_type_variation = &"Header"
-text = "Network Configuration
-- Host Server -"
+grow_vertical = 2
+theme_override_font_sizes/font_size = 64
+text = "What's your Name?"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/host"]
+[node name="line_edit" type="LineEdit" parent="gui/menu_config/name"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.375
+anchor_top = 0.5
+anchor_right = 0.625
+anchor_bottom = 0.5
+offset_top = 57.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+placeholder_text = "enter name"
+max_length = 32
+
+[node name="button_submit" type="Button" parent="gui/menu_config/name"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.375
+anchor_top = 0.5
+anchor_right = 0.625
+anchor_bottom = 0.5
+offset_top = 135.0
+offset_bottom = 188.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Submit"
+
+[node name="network" type="Control" parent="gui/menu_config"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="label_status" type="Label" parent="gui/menu_config/network"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -230.54
+offset_bottom = -185.54
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 64
+text = "Status"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="v_box_container" type="VBoxContainer" parent="gui/menu_config/network"]
 clip_contents = true
 layout_mode = 1
 anchors_preset = -1
@@ -171,179 +334,36 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="port" type="VBoxContainer" parent="gui/menu_network/panel/host/v_box_container"]
+[node name="address" type="VBoxContainer" parent="gui/menu_config/network/v_box_container"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="label_port" type="Label" parent="gui/menu_network/panel/host/v_box_container/port"]
-layout_mode = 2
-text = "Server Port:"
-
-[node name="line_edit_port" type="LineEdit" parent="gui/menu_network/panel/host/v_box_container/port"]
-layout_mode = 2
-placeholder_text = "Port (default: 43517)"
-max_length = 10
-context_menu_enabled = false
-emoji_menu_enabled = false
-
-[node name="button_host" type="Button" parent="gui/menu_network/panel/host/v_box_container"]
-layout_mode = 2
-text = "Host Server"
-
-[node name="button_back" type="Button" parent="gui/menu_network/panel/host/v_box_container"]
-layout_mode = 2
-text = "Back"
-
-[node name="join" type="Control" parent="gui/menu_network/panel"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="label_header" type="Label" parent="gui/menu_network/panel/join"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 128.0
-offset_bottom = 195.0
-grow_horizontal = 2
-theme_type_variation = &"Header"
-text = "Network Configuration
-- Join Server -"
-horizontal_alignment = 1
-
-[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/join"]
-clip_contents = true
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.25
-anchor_top = 0.5
-anchor_right = 0.75
-anchor_bottom = 0.75
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="address" type="VBoxContainer" parent="gui/menu_network/panel/join/v_box_container"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="label_address" type="Label" parent="gui/menu_network/panel/join/v_box_container/address"]
+[node name="label_address" type="Label" parent="gui/menu_config/network/v_box_container/address"]
 layout_mode = 2
 text = "Server Address:"
 
-[node name="line_edit_address" type="LineEdit" parent="gui/menu_network/panel/join/v_box_container/address"]
+[node name="line_edit_address" type="LineEdit" parent="gui/menu_config/network/v_box_container/address"]
 layout_mode = 2
 placeholder_text = "Address"
 max_length = 10
 context_menu_enabled = false
 emoji_menu_enabled = false
 
-[node name="port" type="VBoxContainer" parent="gui/menu_network/panel/join/v_box_container"]
+[node name="port" type="VBoxContainer" parent="gui/menu_config/network/v_box_container"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="label_port" type="Label" parent="gui/menu_network/panel/join/v_box_container/port"]
+[node name="label_port" type="Label" parent="gui/menu_config/network/v_box_container/port"]
 layout_mode = 2
 text = "Server Port:"
 
-[node name="line_edit_port" type="LineEdit" parent="gui/menu_network/panel/join/v_box_container/port"]
+[node name="line_edit_port" type="LineEdit" parent="gui/menu_config/network/v_box_container/port"]
 layout_mode = 2
 placeholder_text = "Port (default: 43517)"
 max_length = 10
 context_menu_enabled = false
 emoji_menu_enabled = false
 
-[node name="button_join" type="Button" parent="gui/menu_network/panel/join/v_box_container"]
+[node name="button_join" type="Button" parent="gui/menu_config/network/v_box_container"]
 layout_mode = 2
 text = "Join Server"
-
-[node name="button_back" type="Button" parent="gui/menu_network/panel/join/v_box_container"]
-layout_mode = 2
-text = "Back"
-
-[node name="status" type="Control" parent="gui/menu_network/panel"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="label_header" type="Label" parent="gui/menu_network/panel/status"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 128.0
-offset_bottom = 195.0
-grow_horizontal = 2
-theme_type_variation = &"Header"
-text = "Network Configuration
-- Network Status -"
-horizontal_alignment = 1
-
-[node name="v_box_container" type="VBoxContainer" parent="gui/menu_network/panel/status"]
-clip_contents = true
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.25
-anchor_top = 0.5
-anchor_right = 0.75
-anchor_bottom = 0.75
-offset_top = -101.75
-offset_bottom = 101.75
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="label_status" type="Label" parent="gui/menu_network/panel/status/v_box_container"]
-layout_mode = 2
-text = "Status"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="button_back" type="Button" parent="gui/menu_network/panel/status/v_box_container"]
-layout_mode = 2
-text = "Back"
-
-[node name="test" type="Control" parent="gui"]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="line_edit" type="LineEdit" parent="gui/test"]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 230.0
-offset_right = 296.0
-offset_bottom = 283.0
-text = "foo"
-
-[node name="button_reliable" type="Button" parent="gui/test"]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 327.0
-offset_right = 476.0
-offset_bottom = 380.0
-text = "send reliable message (TCP)"
-
-[node name="button_unreliable" type="Button" parent="gui/test"]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 432.0
-offset_right = 526.0
-offset_bottom = 485.0
-text = "send unreliable message (UDP)"
-
-[node name="drag" type="CanvasLayer" parent="."]
-layer = 2
-follow_viewport_enabled = true
-
-[node name="network" type="Node" parent="."]
-script = ExtResource("6_ujfqy")
-metadata/_custom_type_script = "uid://b3eo1vdw04anx"

@@ -16,6 +16,12 @@ enum State {
 var _state: State = State.NONE
 
 @onready
+var _button_toggle: Button = $button_toggle
+
+@onready
+var _panel: Panel = $panel as Panel
+
+@onready
 var _main: Control = $panel/main as Control
 @onready
 var _main_button_host: Button = $panel/main/v_box_container/button_host as Button
@@ -53,9 +59,14 @@ var _status_label_status: Label = $panel/status/v_box_container/label_status as 
 @onready
 var _status_button_back: Button = $panel/status/v_box_container/button_back as Button
 
+@onready
+var _network_test: Control = $network_test as Control
+
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	
+	_button_toggle.pressed.connect(_on_button_toggle_pressed)
 	
 	_host_line_edit_port.text_changed.connect(_on_host_line_edit_port_text_changed)
 	_join_line_edit_port.text_changed.connect(_on_join_line_edit_port_text_changed)
@@ -72,6 +83,12 @@ func _ready() -> void:
 	_status_button_back.pressed.connect(_stop_connection)
 	
 	set_state(_state)
+
+func _on_button_toggle_pressed() -> void:
+	if _state == State.NONE:
+		set_state(State.MAIN)
+	else:
+		set_state(State.NONE)
 
 func _host_server() -> void:
 	var port: int = _host_line_edit_port.text.to_int()
@@ -104,13 +121,19 @@ func set_state(state: State) -> void:
 	_state = state
 	match state:
 		State.NONE:
-			visible = false
+			_network_test.visible = false
+			
+			_panel.visible = false
 			_main.visible = false
 			_host.visible = false
 			_join.visible = false
 			_status.visible = false
+			
+			_button_toggle.grab_focus()
 		State.MAIN:
-			visible = true
+			_network_test.visible = true
+			
+			_panel.visible = true
 			_main.visible = true
 			_host.visible = false
 			_join.visible = false
@@ -118,7 +141,9 @@ func set_state(state: State) -> void:
 			
 			_main_button_host.grab_focus()
 		State.HOST:
-			visible = true
+			_network_test.visible = true
+			
+			_panel.visible = true
 			_main.visible = false
 			_host.visible = true
 			_join.visible = false
@@ -126,7 +151,9 @@ func set_state(state: State) -> void:
 			
 			_host_line_edit_port.grab_focus()
 		State.JOIN:
-			visible = true
+			_network_test.visible = true
+			
+			_panel.visible = true
 			_main.visible = false
 			_host.visible = false
 			_join.visible = true
@@ -134,7 +161,9 @@ func set_state(state: State) -> void:
 			
 			_join_line_edit_address.grab_focus()
 		State.STATUS:
-			visible = true
+			_network_test.visible = true
+			
+			_panel.visible = true
 			_main.visible = false
 			_host.visible = false
 			_join.visible = false

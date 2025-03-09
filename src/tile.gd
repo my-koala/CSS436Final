@@ -3,27 +3,22 @@ extends Node2D
 class_name Tile
 
 # tile data: 
+# 
 
 # NOTE: Dummy Physics Engine disables physics object picking.
-# TODO: gui blocks mouse inputs
 # TODO: draw face letter
 
 signal drag_started()
 signal drag_stopped()
 
-enum Face {
-	A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-}
-
 @export
-var face: Face = Face.A
+var face: int = 0
 
 @export
 var points: int = 1
 
 @export
 var locked: bool = false
-
 
 var _input_mouse: bool = false
 var _input_mouse_event: bool = false
@@ -67,13 +62,13 @@ func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	
-	if _drag:
+	if locked || _drag:
 		global_position = get_global_mouse_position()
 		if !_input_mouse:
 			_drag = false
 			drag_stopped.emit()
 	else:
-		if _input_mouse_event && _input_mouse_hovering:
+		if !locked && (_input_mouse_event && _input_mouse_hovering):
 			_drag = true
 			drag_started.emit()
 	
