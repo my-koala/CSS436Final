@@ -3,10 +3,15 @@ extends Node
 
 # TODO: (monday)
 # move Submit and Recall button to game_tiles @onready
+# add display message on submit (with errors or success)
+# disable submit button when already submitted
 # implement points + leaderboard display (in game and lobby)
-# infinite board
+# infinite board - generative/with tile placements, or from the start?
+# - could use parallax layer to repeat drawing
+# - decorators (such as tile multipliers) will also repeat, EXCEPT for the center star! probably its own sprite
 # board multipliers
-# word check algorithm + http requests
+# word check algorithm (prahas)
+# http request for word verification
 
 # TODO:
 # setup WSS connections
