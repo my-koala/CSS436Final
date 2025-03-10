@@ -28,6 +28,7 @@ class Player:
 	var ready: bool = false
 	var submitted: bool = true
 	var points: int = 0
+	var tiles: PackedByteArray = PackedByteArray()
 
 signal updated()
 
@@ -258,6 +259,66 @@ func _set_player_submitted(player_id: int, player_submitted: bool) -> bool:
 	return true
 
 #endregion
+#region Player Tiles
+
+func clear_all_player_tiles() -> void:
+	if multiplayer.has_multiplayer_peer():
+		if is_multiplayer_authority():
+			_local_player.tiles = PackedByteArray()
+			for remote_player: Player in _remote_players:
+				remote_player.tiles = PackedByteArray()
+			_rpc_clear_all_player_tiles.rpc()
+			updated.emit()
+
+@rpc("authority", "call_remote", "reliable", 1)
+func _rpc_clear_all_player_tiles() -> void:
+	_local_player.tiles = PackedByteArray()
+	for remote_player: Player in _remote_players:
+		remote_player.tiles = PackedByteArray()
+
+func get_local_player_tiles() -> Array[int]:
+	var player_tiles: Array[int] = []
+	for index: int in _local_player.tiles.size():
+		player_tiles.append(_local_player.tiles.decode_u8(index))
+	return player_tiles
+
+func get_player_tiles(player_id: int) -> Array[int]:
+	var player: Player = _get_player(player_id)
+	if is_instance_valid(player):
+		var player_tiles: Array[int] = []
+		for index: int in player.tiles.size():
+			player_tiles.append(player.tiles.decode_u8(index))
+		return player_tiles
+	return []
+
+func set_player_tiles(player_id: int, player_tiles: Array[int]) -> void:
+	if multiplayer.has_multiplayer_peer():
+		if is_multiplayer_authority():
+			var bytes: PackedByteArray = PackedByteArray()
+			bytes.resize(player_tiles.size())
+			for index: int in player_tiles.size():
+				bytes.encode_u8(index, player_tiles[index])
+			_set_player_tiles(player_id, bytes)
+
+@rpc("authority", "call_remote", "reliable", 1)
+func _rpc_set_player_tiles(player_id: int, player_tiles: PackedByteArray) -> void:
+	_set_player_tiles(player_id, player_tiles)
+
+func _set_player_tiles(player_id: int, player_tiles: PackedByteArray) -> bool:
+	var player: Player = _get_player(player_id)
+	if !is_instance_valid(player):
+		return false
+	
+	if player.tiles == player_tiles:
+		return false
+	
+	player.tiles = player_tiles
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		_rpc_set_player_tiles.rpc(player_id, player_tiles)
+	updated.emit()
+	return true
+
+#endregion
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -275,11 +336,13 @@ func _on_multiplayer_peer_connected(player_id: int) -> void:
 		_rpc_set_player_ready.rpc_id(player_id, _local_player.id, _local_player.ready)
 		_rpc_set_player_spectator.rpc_id(player_id, _local_player.id, _local_player.spectator)
 		_rpc_set_player_submitted.rpc_id(player_id, _local_player.id, _local_player.submitted)
+		_rpc_set_player_tiles.rpc_id(player_id, _local_player.id, _local_player.tiles)
 		for remote_player: Player in _remote_players:
 			_rpc_set_player_name.rpc_id(player_id, remote_player.id, remote_player.name)
 			_rpc_set_player_ready.rpc_id(player_id, remote_player.id, remote_player.ready)
 			_rpc_set_player_spectator.rpc_id(player_id, remote_player.id, remote_player.spectator)
 			_rpc_set_player_submitted.rpc_id(player_id, remote_player.id, remote_player.submitted)
+			_rpc_set_player_tiles.rpc_id(player_id, remote_player.id, remote_player.tiles)
 	
 	var player: Player = Player.new()
 	player.id = player_id
@@ -299,6 +362,6 @@ func _on_multiplayer_connected_to_server() -> void:
 	updated.emit()
 
 func _on_multiplayer_server_disconnected() -> void:
-	_local_player.id = 1
+	_local_player = Player.new()
 	_remote_players.clear()
 	updated.emit()

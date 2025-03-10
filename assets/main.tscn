@@ -1,18 +1,16 @@
-[gd_scene load_steps=15 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=13 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
 [ext_resource type="Script" uid="uid://c6hl88o0btr7v" path="res://src/game.gd" id="2_fphxj"]
 [ext_resource type="Script" uid="uid://jn8a64othr63" path="res://assets/game_camera.gd" id="2_j2eim"]
-[ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="3_2d37k"]
 [ext_resource type="Script" uid="uid://c7y3iqwrjfr06" path="res://src/game_data.gd" id="3_h4xlo"]
-[ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="4_836ik"]
 [ext_resource type="Script" uid="uid://b5vbsaxq5wqfb" path="res://src/game_lobby.gd" id="5_ew6cl"]
 [ext_resource type="Script" uid="uid://b2ot00vang7bj" path="res://src/tile_board.gd" id="5_m5usj"]
 [ext_resource type="Script" uid="uid://b2x1h1hld85pa" path="res://src/game_board.gd" id="6_km2eh"]
 [ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
+[ext_resource type="Script" uid="uid://da0gfhno5f7d2" path="res://src/game_tiles.gd" id="7_h4xlo"]
 [ext_resource type="Script" uid="uid://3fibd4vboth" path="res://src/tile_rack.gd" id="7_vqaxa"]
-[ext_resource type="Script" uid="uid://do3qity78vjh4" path="res://src/game_timer.gd" id="8_otm8r"]
 [ext_resource type="Script" uid="uid://dev6hqla35dfo" path="res://src/menu_config.gd" id="11_vvw4a"]
 
 [node name="main" type="Node"]
@@ -29,7 +27,7 @@ metadata/_custom_type_script = "uid://b3eo1vdw04anx"
 script = ExtResource("3_h4xlo")
 
 [node name="game_lobby" type="CanvasLayer" parent="game"]
-layer = 8
+layer = 16
 
 [node name="game_lobby" type="Control" parent="game/game_lobby" node_paths=PackedStringArray("game_data")]
 layout_mode = 3
@@ -113,9 +111,13 @@ text = "Click to READY"
 layer = 0
 follow_viewport_enabled = true
 
-[node name="game_board" type="Node2D" parent="game/game_board" node_paths=PackedStringArray("game_data")]
+[node name="game_board" type="Node2D" parent="game/game_board" node_paths=PackedStringArray("_game_data")]
 script = ExtResource("6_km2eh")
-game_data = NodePath("../../game_data")
+_game_data = NodePath("../../game_data")
+
+[node name="game_tiles" type="Node" parent="game/game_board/game_board" node_paths=PackedStringArray("_game_data")]
+script = ExtResource("7_h4xlo")
+_game_data = NodePath("../../../game_data")
 
 [node name="game_camera" type="Camera2D" parent="game/game_board/game_board"]
 process_callback = 0
@@ -127,33 +129,6 @@ tile_map_data = PackedByteArray("AAD9//3/AAAAAAAAAAD9//7/AAAAAAEAAAD9////AAAAAAA
 tile_set = ExtResource("2_06ig3")
 script = ExtResource("5_m5usj")
 metadata/_edit_lock_ = true
-
-[node name="tiles" type="Node2D" parent="game/game_board/game_board"]
-y_sort_enabled = true
-
-[node name="tile" type="Node2D" parent="game/game_board/game_board/tiles"]
-script = ExtResource("4_836ik")
-
-[node name="sprite_2d" type="Sprite2D" parent="game/game_board/game_board/tiles/tile"]
-texture = ExtResource("3_2d37k")
-offset = Vector2(0, -64)
-region_enabled = true
-region_rect = Rect2(0, 0, 128, 256)
-
-[node name="pickable" type="Control" parent="game/game_board/game_board/tiles/tile"]
-layout_mode = 3
-anchor_left = 0.5
-anchor_top = 0.75
-anchor_right = 0.5
-anchor_bottom = 0.75
-offset_left = -64.0
-offset_top = -80.0
-offset_right = 64.0
-offset_bottom = 48.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-metadata/_edit_use_anchors_ = true
 
 [node name="gui" type="CanvasLayer" parent="game/game_board/game_board"]
 layer = 4
@@ -175,9 +150,8 @@ offset_bottom = 45.0
 grow_horizontal = 2
 text = "Turn ## | Time Left: ##"
 horizontal_alignment = 1
-script = ExtResource("8_otm8r")
 
-[node name="tile_rack" type="ColorRect" parent="game/game_board/game_board/gui/play"]
+[node name="tile_hotbar" type="ColorRect" parent="game/game_board/game_board/gui/play"]
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 1.0
@@ -188,30 +162,6 @@ grow_horizontal = 2
 grow_vertical = 0
 color = Color(0.570611, 0.375719, 0.372228, 1)
 script = ExtResource("7_vqaxa")
-
-[node name="tile" type="Node2D" parent="game/game_board/game_board/gui/play/tile_rack"]
-script = ExtResource("4_836ik")
-
-[node name="sprite_2d" type="Sprite2D" parent="game/game_board/game_board/gui/play/tile_rack/tile"]
-texture = ExtResource("3_2d37k")
-offset = Vector2(0, -64)
-region_enabled = true
-region_rect = Rect2(0, 0, 128, 256)
-
-[node name="pickable" type="Control" parent="game/game_board/game_board/gui/play/tile_rack/tile"]
-layout_mode = 3
-anchor_left = 0.5
-anchor_top = 0.75
-anchor_right = 0.5
-anchor_bottom = 0.75
-offset_left = -64.0
-offset_top = -80.0
-offset_right = 64.0
-offset_bottom = 48.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-metadata/_edit_use_anchors_ = true
 
 [node name="control" type="Control" parent="game/game_board/game_board/gui/play"]
 layout_mode = 1
@@ -226,12 +176,42 @@ offset_right = 492.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="drag" type="CanvasLayer" parent="game/game_board/game_board"]
-layer = 2
+[node name="button_submit" type="Button" parent="game/game_board/game_board/gui/play"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -59.0
+offset_top = -222.26
+offset_right = 59.0
+offset_bottom = -169.26
+grow_horizontal = 2
+grow_vertical = 0
+text = "Submit"
+
+[node name="button_recall" type="Button" parent="game/game_board/game_board/gui/play"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 240.0
+offset_top = -222.0
+offset_right = 577.0
+offset_bottom = -169.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Recall (to implement)"
+
+[node name="tile_drag_layer" type="CanvasLayer" parent="game/game_board/game_board"]
+layer = 6
 follow_viewport_enabled = true
 
 [node name="gui" type="CanvasLayer" parent="."]
-layer = 16
+layer = 32
 
 [node name="menu_config" type="Control" parent="gui"]
 visible = false

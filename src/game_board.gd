@@ -3,21 +3,34 @@ extends Node2D
 class_name GameBoard
 
 # TODO:
-# 
+# where to instantiate newly created tiles?
+# sync game board state (need a dictionary i suppose)
+
+const DEFAULT_TURN_COUNT: int = 8
+const DEFAULT_TURN_TIME: float = 60.0
 
 signal loop_stopped()
 
+enum SubmissionResult {
+	OK,
+	ERROR,
+	TIMED_OUT,
+	STILL_PROCESSING,
+	ALREADY_SUBMITTED,
+	EMPTY_SUBMISSION,
+	INVALID_SUBMISSION,
+	INVALID_TILES,
+	TILES_OVERLAPPING,
+	TILES_REDUNDANT,
+	TILES_NOT_COLLINEAR,
+	TILES_NOT_CONTINOUS,
+	FIRST_CENTER,
+	INVALID_WORD,
+}
+
+
 @export
-var game_data: GameData = null:
-	get:
-		return game_data
-	set(value):
-		if game_data != value:
-			if is_instance_valid(game_data):
-				game_data.updated.disconnect(_on_game_data_updated)
-			game_data = value
-			if is_instance_valid(game_data):
-				game_data.updated.connect(_on_game_data_updated)
+var _game_data: GameData = null
 
 var _game_data_dirty: bool = false
 func _on_game_data_updated() -> void:
@@ -26,16 +39,16 @@ func _on_game_data_updated() -> void:
 var active: bool = false
 
 @onready
-var _tile_board: TileBoard = $tile_board as TileBoard
+var _game_tiles: GameTiles = $game_tiles as GameTiles
 
 @onready
-var _tile_rack: TileRack = $gui/play/tile_rack as TileRack
+var _tile_board: TileBoard = $tile_board as TileBoard
 
 @onready
 var _gui_label_turn: Label = $gui/play/label_turn as Label
 
 @onready
-var _drag: CanvasLayer = $drag as CanvasLayer
+var _button_submit: Button = $gui/play/button_submit as Button
 
 var _turn_count: int = 0
 var _turn_count_max: int = 0
@@ -46,7 +59,7 @@ var _loop: bool = false
 func is_loop() -> bool:
 	return _loop
 
-func start_loop(turn_count: int = 2, turn_time: float = 4.0) -> void:
+func start_loop(turn_count: int = DEFAULT_TURN_COUNT, turn_time: float = DEFAULT_TURN_TIME) -> void:
 	if !multiplayer.has_multiplayer_peer() || !is_multiplayer_authority():
 		return
 	
@@ -59,12 +72,26 @@ func start_loop(turn_count: int = 2, turn_time: float = 4.0) -> void:
 	_turn_time = 0.0
 	_turn_time_max = turn_time
 	
+	next_turn()
 
-func _process(delta: float) -> void:
+func next_turn() -> void:
+	# Start next turn.
+	_turn_count += 1
+	_turn_time = _turn_time_max
+	# set players submit
+	# NOTE: players dont set submit at all, only server
+	# server game board submit passes submission, then sets submit and notifies all peers
+	_game_data.set_all_players_submitted(false)
+	_rpc_set_turn.rpc(_turn_count, _turn_count_max, _turn_time, _turn_time_max)
+	
+	_game_tiles.assign_tiles()
+
+func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	
-	_gui_label_turn.text = "Turn %d/%d | Time Left: %01d:%02d" % [_turn_count, _turn_count_max, int(_turn_time / 60.0), int(fmod(_turn_time, 60.0))]
+	_game_data.updated.connect(_on_game_data_updated)
+	_button_submit.pressed.connect(_on_button_submit_pressed)
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -74,24 +101,19 @@ func _physics_process(delta: float) -> void:
 		_turn_time = maxf(_turn_time - delta, 0.0)
 	elif _loop:
 		if _turn_count < _turn_count_max:
-			# Start next turn.
-			_turn_count += 1
-			_turn_time = _turn_time_max
-			# set players submit
-			# NOTE: players dont set submit at all, only server
-			# server game board submit passes submission, then sets submit and notifies all peers
-			game_data.set_all_players_submitted(false)
-			_rpc_set_turn.rpc(_turn_count, _turn_count_max, _turn_time, _turn_time_max)
-			
-			# assign players tiles
-			for player_id: int in game_data.get_player_ids():
-				if game_data.get_player_spectator(player_id):
-					continue
-	
+			next_turn()
 		else:
 			# Out of turns, end the game loop.
 			stop_loop()
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	
+	if !is_visible_in_tree():
+		return
+	
+	_gui_label_turn.text = "Turn %d/%d | Time Left: %01d:%02d" % [_turn_count, _turn_count_max, int(_turn_time / 60.0), int(fmod(_turn_time, 60.0))]
 
 @rpc("authority", "call_remote", "reliable", 1)
 func _rpc_set_turn(turn_count: int, turn_count_max: int, turn_time: float, turn_time_max: float) -> void:
@@ -111,70 +133,79 @@ func stop_loop() -> void:
 	_turn_time_max = 0.0
 	# get 
 	
+	_game_data.clear_all_player_tiles()
+	
 	loop_stopped.emit()
 
-func _ready() -> void:
-	if Engine.is_editor_hint():
-		return
-	
+func _on_button_submit_pressed() -> void:
+	if multiplayer.has_multiplayer_peer():
+		var bytes: PackedByteArray = _game_tiles.encode_submission_bytes()
+		if !bytes.is_empty():
+			print("Submitting!")
+			_rpc_request_submit.rpc_id(get_multiplayer_authority(), bytes)
 
-# Server to client: sends tile faces.
-# TODO: replace, dont add
-@rpc("authority", "call_remote", "reliable", 0)
-func _rpc_set_rack_tiles(bytes: PackedByteArray) -> void:
-	# Read bytes as tile faces.
-	var tile_faces: Array[int] = []
-	var index: int = 0
-	while index < bytes.size():
-		tile_faces.append(bytes.decode_u8(index * 8))
-		index += 1
-	print("Received tiles: " + str(tile_faces))
-	for tile_face: int in tile_faces:
-		var tile: Tile = Tile.new()
-		tile.face = tile_face
-		#if !_tile_rack.add_tile(tile):
-		#	push_error("HUGE PROBLEM: Could not add tile!")
+var _player_submissions_processing: Array[int] = []
 
 # Client to server: submit tiles.
 # tile_pos_x: 2 bytes (16 bit signed int)
 # tile_pos_y: 2 bytes (16 bit signed int)
 # tile_face: 1 byte (8 bit unsigned int)
 @rpc("any_peer", "call_remote", "reliable", 0)
-func _rpc_submit(bytes: PackedByteArray) -> void:
-	var peer_id: int = multiplayer.get_remote_sender_id()
-	var submission: Dictionary[Vector2i, int] = {}
-	var index: int = 0
+func _rpc_request_submit(bytes: PackedByteArray) -> void:
+	var player_id: int = multiplayer.get_remote_sender_id()
 	
-	while index < bytes.size():
-		var tile_position_x: int = bytes.decode_s16(index + 0)
-		var tile_position_y: int = bytes.decode_s16(index + 16)
-		var tile_face: int = bytes.decode_u8(index + 32)
-		submission[Vector2i(tile_position_x, tile_position_y)] = tile_face
-		index += 5
+	var submission: Dictionary[Vector2i, int] = _game_tiles.decode_submission_bytes(bytes)
+	if submission.is_empty():
+		_rpc_submit_result.rpc_id(player_id, SubmissionResult.INVALID_SUBMISSION)
+		return
 	
-	if _validate_submission(peer_id, submission):
-		_rpc_submit_result.rpc_id(peer_id, true)
-		# TODO: Change game board state (add tiles) and notify all peers.
-	else:
-		_rpc_submit_result.rpc_id(peer_id, false)
+	if _player_submissions_processing.has(player_id):
+		_rpc_submit_result.rpc_id(player_id, SubmissionResult.STILL_PROCESSING)
+		return
+	
+	_player_submissions_processing.append(player_id)
+	
+	var submission_result: SubmissionResult = await _validate_submission(player_id, submission)
+	if submission_result == SubmissionResult.OK:
+		# Update game board state (add tiles), remove submitter player tiles, and notify all peers.
+		var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
+		for coordinates: Vector2i in submission:
+			var face: int = submission[coordinates]
+			player_tiles.erase(face)
+			_tile_board.add_tile(coordinates, face)
+		_game_data.set_player_tiles(player_id, player_tiles)
+		_game_data.set_player_submitted(player_id, true)
+	
+	_rpc_submit_result.rpc_id(player_id, submission_result)
+	_player_submissions_processing.erase(player_id)
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _rpc_submit_result(result: bool) -> void:
-	print("got result: " + str(result))
+func _rpc_submit_result(submission_result: SubmissionResult) -> void:
+	print("got result: " + str(submission_result))
 
-func _validate_submission(peer_id: int, submission: Dictionary[Vector2i, int]) -> bool:
-	# TODO: Check if player has already submitted this turn.
+func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int]) -> SubmissionResult:
+	# Check if player has already submitted this turn.
+	if _game_data.get_player_submitted(player_id):
+		return SubmissionResult.ALREADY_SUBMITTED
 	
 	# Empty submissions are invalid.
 	if submission.is_empty():
-		return false
+		return SubmissionResult.EMPTY_SUBMISSION
+	
+	var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
+	var submission_tile_faces: Array[int] = submission.values()
+	for submission_tile_face: int in submission_tile_faces:
+		if player_tiles.has(submission_tile_face):
+			player_tiles.erase(submission_tile_face)
+		else:
+			return SubmissionResult.INVALID_TILES# game code problem
 	
 	var tile_positions: Array[Vector2i] = submission.keys()
 	
 	# Check for overlapping tile positions.
 	for tile_position: Vector2i in tile_positions:
 		if _tile_board.has_tile_at(tile_position):
-			return false
+			return SubmissionResult.TILES_OVERLAPPING# too slow!
 	
 	# Check for redundant tile positions.
 	for index_a: int in tile_positions.size():
@@ -182,9 +213,9 @@ func _validate_submission(peer_id: int, submission: Dictionary[Vector2i, int]) -
 			if index_a == index_b:
 				continue
 			if tile_positions[index_a] == tile_positions[index_b]:
-				return false
+				return SubmissionResult.TILES_REDUNDANT# game code problem
 	
-	# Check tile collinearity and connectivity.
+	# Check tile collinearity and continuity.
 	if tile_positions.size() > 1:
 		# Get component-wise min and max (upper-left and bottom-right 2D rect).
 		var tile_rect_min: Vector2i = tile_positions[0]
@@ -196,7 +227,7 @@ func _validate_submission(peer_id: int, submission: Dictionary[Vector2i, int]) -
 		# If both axis components are non-zero, tiles are not collinear.
 		var axis: Vector2i = (tile_rect_max - tile_rect_min).mini(1)
 		if axis.x != 0 && axis.y != 0:
-			return false
+			return SubmissionResult.TILES_NOT_COLLINEAR
 		
 		# NOTE: axis is either Vector2i.DOWN or Vector2i.RIGHT
 		assert(axis == Vector2i.DOWN || axis == Vector2i.RIGHT)
@@ -215,8 +246,8 @@ func _validate_submission(peer_id: int, submission: Dictionary[Vector2i, int]) -
 		var length: int = (tile_position_max - tile_position_min)[axis.max_axis_index()]
 		while step < length:
 			var tile_position: Vector2i = (step * axis) + tile_position_min
-			if !submission.has(tile_position) || _tile_board.has_tile_at(tile_position):
-				return false
+			if !submission.has(tile_position) && !_tile_board.has_tile_at(tile_position):
+				return SubmissionResult.TILES_NOT_CONTINOUS
 			step += 1
 	
 	# Check for center tile position (if first submission).
@@ -226,30 +257,13 @@ func _validate_submission(peer_id: int, submission: Dictionary[Vector2i, int]) -
 			if tile_position == Vector2i.ZERO:
 				has_center = true
 		if !has_center:
-			return false
+			return SubmissionResult.FIRST_CENTER
 	
-	# TODO: Implement word check algorithm.
+	# TODO: Word check.
+	# Prahas: make code that generates all words that are created with this submission.
+	# Words are 2 or more consecutive tiles in left->right and top->bottom directions.
+	var words: Array[String] = []
 	
-	return true
-
-#func _on_tile_drag_started(tile: Tile) -> void:
-	#if _tile_rack.has_tile(tile):
-		#_tile_rack.remove_tile(tile)
-	#tile.reparent(_drag, true)
-	#tile.global_position = get_global_mouse_position()
-	#tile.reset_physics_interpolation()
-
-#func _on_tile_drag_stopped(tile: Tile) -> void:
-	## Snap to board grid.
-	## TODO: check if tile position is outside board bounds
-	## TODO: track tiles and check if a tile was already placed at coordinate
-	#if _tile_rack.is_hovered():
-		#tile.reparent(_tile_rack, true)
-		#tile.global_position = _tile_rack.get_global_mouse_position()
-		#_tile_rack.add_tile(tile)
-		#tile.reset_physics_interpolation()
-	#else:
-		#tile.reparent(_tile_board, true)
-		#tile.global_position = get_global_mouse_position()
-		#tile.reset_physics_interpolation()
-		#_tile_board.add_tile(tile, _tile_board.local_to_map(_tile_board.to_local(tile.global_position)))
+	await get_tree().physics_frame
+	
+	return SubmissionResult.OK

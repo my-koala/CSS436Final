@@ -3,7 +3,7 @@
 extends Node
 class_name Network
 
-## Wrapper node for multiplayer.
+## MyKoala's wrapper node for multiplayer.
 
 # NOTE: Offline server: 127.0.0.1:4000
 # NOTE: Supplied multiplayer.multiplayer_peer must be connecting or connected.

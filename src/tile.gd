@@ -2,34 +2,43 @@
 extends Node2D
 class_name Tile
 
-# tile data: 
-# 
-
 # NOTE: Dummy Physics Engine disables physics object picking.
-# TODO: draw face letter
 
-signal drag_started()
-signal drag_stopped()
+const FACE_MIN: int = 0
+const FACE_MAX: int = 25
+const FACE_UNICODE_OFFSET: int = 65
 
-@export
-var face: int = 0
+@export_range(FACE_MIN, FACE_MAX, 1)
+var face: int = 0:
+	get:
+		return face
+	set(value):
+		face = clampi(value, FACE_MIN, FACE_MAX)
 
-@export
-var points: int = 1
-
-@export
-var locked: bool = false
-
-var _input_mouse: bool = false
-var _input_mouse_event: bool = false
 var _input_mouse_hovering: bool = false
 
-var _drag: bool = false
+@export
+var locked: bool = false:
+	get:
+		return locked
+	set(value):
+		locked = value
+
+@export
+var locked_modulate: Color = Color(0.7, 0.7, 0.85, 1.0)
 
 @onready
 var _sprite: Sprite2D = $sprite_2d as Sprite2D
 @onready
 var _pickable: Control = $pickable as Control
+@onready
+var _label_face: Label = $display/label_face as Label
+@onready
+var _label_points: Label = $display/label_points as Label
+
+# TODO: probably a big match statement
+func get_face_points() -> int:
+	return 1
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -38,38 +47,28 @@ func _ready() -> void:
 	_pickable.mouse_entered.connect(_on_pickable_mouse_entered)
 	_pickable.mouse_exited.connect(_on_pickable_mouse_exited)
 
-func _input(event: InputEvent) -> void:
-	if Engine.is_editor_hint():
-		return
-	
-	if _drag:
-		get_viewport().set_input_as_handled()
-	
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		if !_input_mouse:
-			_input_mouse_event = true
-		_input_mouse = true
-	else:
-		_input_mouse = false
-
 func _on_pickable_mouse_entered() -> void:
 	_input_mouse_hovering = true
 
 func _on_pickable_mouse_exited() -> void:
 	_input_mouse_hovering = false
 
-func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint():
-		return
-	
-	if locked || _drag:
-		global_position = get_global_mouse_position()
-		if !_input_mouse:
-			_drag = false
-			drag_stopped.emit()
+func is_mouse_hovered() -> bool:
+	return _input_mouse_hovering
+
+func _process(delta: float) -> void:
+	if !locked:
+		modulate = Color.WHITE
 	else:
-		if !locked && (_input_mouse_event && _input_mouse_hovering):
-			_drag = true
-			drag_started.emit()
+		modulate = locked_modulate
+	_label_face.text = String.chr(face + FACE_UNICODE_OFFSET)
+	_label_points.text = str(get_face_points())
+
+func _physics_process(delta: float) -> void:
+	if !locked:
+		_pickable.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_pickable.mouse_filter = Control.MOUSE_FILTER_STOP
+	else:
+		_pickable.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		_pickable.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	_input_mouse_event = false

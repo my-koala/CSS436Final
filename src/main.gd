@@ -1,6 +1,19 @@
 @tool
 extends Node
 
+# TODO: (monday)
+# move Submit and Recall button to game_tiles @onready
+# implement points + leaderboard display (in game and lobby)
+# infinite board
+# board multipliers
+# word check algorithm + http requests
+
+# TODO:
+# setup WSS connections
+# create Let's Encrypt certificate, export using OpenSSL, load onto server along with private key
+# see TLSOptions
+# https://docs.godotengine.org/en/4.4/tutorials/networking/ssl_certificates.html
+
 # i think i need a DockerFile for running on docker container
 # https://github.com/rivet-gg/godot-docker/blob/main/Dockerfile
 # https://learn.microsoft.com/en-us/azure/container-apps/quickstart-code-to-cloud?tabs=bash%2Ccsharp
