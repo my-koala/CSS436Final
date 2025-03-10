@@ -259,10 +259,21 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 		if !has_center:
 			return SubmissionResult.FIRST_CENTER
 	
+	# Prahas:
+	# TODO: Check if connects to tiles already on the board.
+	# <insert code here>
 	# TODO: Word check.
-	# Prahas: make code that generates all words that are created with this submission.
+	# Make code that generates all words that are created with this submission.
 	# Words are 2 or more consecutive tiles in left->right and top->bottom directions.
+	# submission dictionary (submission tiles), _tile_board for getting board tiles
 	var words: Array[String] = []
+	# <insert code here>
+	
+	# TODO: Check word with API via HTTP request.
+	# james can port dong's code here
+	for word: String in words:
+		if false:
+			return SubmissionResult.INVALID_WORD
 	
 	await get_tree().physics_frame
 	
