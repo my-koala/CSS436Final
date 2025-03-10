@@ -5,59 +5,142 @@
 [ext_resource type="Script" uid="uid://c6hl88o0btr7v" path="res://src/game.gd" id="2_fphxj"]
 [ext_resource type="Script" uid="uid://jn8a64othr63" path="res://assets/game_camera.gd" id="2_j2eim"]
 [ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="3_2d37k"]
-[ext_resource type="Script" uid="uid://c7y3iqwrjfr06" path="res://src/game_players.gd" id="3_h4xlo"]
+[ext_resource type="Script" uid="uid://c7y3iqwrjfr06" path="res://src/game_data.gd" id="3_h4xlo"]
 [ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="4_836ik"]
+[ext_resource type="Script" uid="uid://b5vbsaxq5wqfb" path="res://src/game_lobby.gd" id="5_ew6cl"]
 [ext_resource type="Script" uid="uid://b2ot00vang7bj" path="res://src/tile_board.gd" id="5_m5usj"]
+[ext_resource type="Script" uid="uid://b2x1h1hld85pa" path="res://src/game_board.gd" id="6_km2eh"]
 [ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
 [ext_resource type="Script" uid="uid://3fibd4vboth" path="res://src/tile_rack.gd" id="7_vqaxa"]
 [ext_resource type="Script" uid="uid://do3qity78vjh4" path="res://src/game_timer.gd" id="8_otm8r"]
 [ext_resource type="Script" uid="uid://dev6hqla35dfo" path="res://src/menu_config.gd" id="11_vvw4a"]
-[ext_resource type="Script" uid="uid://dj7hgnj0r1l15" path="res://src/game_player_list.gd" id="12_h4xlo"]
-[ext_resource type="Script" uid="uid://b4nfwx1s7rb5s" path="res://src/game_button_ready.gd" id="13_vvw4a"]
 
 [node name="main" type="Node"]
 script = ExtResource("1_db5cl")
 
-[node name="game" type="CanvasLayer" parent="."]
-layer = 0
-follow_viewport_enabled = true
-
-[node name="game" type="Node" parent="game"]
+[node name="game" type="Node" parent="."]
 script = ExtResource("2_fphxj")
 
-[node name="network" type="Node" parent="game/game"]
+[node name="network" type="Node" parent="game"]
 script = ExtResource("6_ujfqy")
 metadata/_custom_type_script = "uid://b3eo1vdw04anx"
 
-[node name="game_players" type="Node" parent="game/game"]
+[node name="game_data" type="Node" parent="game"]
 script = ExtResource("3_h4xlo")
 
-[node name="world" type="Node2D" parent="game/game"]
+[node name="game_lobby" type="CanvasLayer" parent="game"]
+layer = 8
 
-[node name="game_camera" type="Camera2D" parent="game/game/world"]
+[node name="game_lobby" type="Control" parent="game/game_lobby" node_paths=PackedStringArray("game_data")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_ew6cl")
+game_data = NodePath("../../game_data")
+metadata/_custom_type_script = "uid://b5vbsaxq5wqfb"
+
+[node name="color_rect" type="ColorRect" parent="game/game_lobby/game_lobby"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.623331, 0.594586, 0.585371, 1)
+
+[node name="panel_players" type="Panel" parent="game/game_lobby/game_lobby"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.625
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="scroll_container" type="ScrollContainer" parent="game/game_lobby/game_lobby/panel_players"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="player_list" type="Control" parent="game/game_lobby/game_lobby/panel_players/scroll_container"]
+layout_mode = 2
+
+[node name="label_name" type="RichTextLabel" parent="game/game_lobby/game_lobby/panel_players/scroll_container/player_list"]
+layout_mode = 2
+offset_right = 560.0
+offset_bottom = 864.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "<player name>"
+
+[node name="label_ready" type="RichTextLabel" parent="game/game_lobby/game_lobby/panel_players/scroll_container/player_list"]
+layout_mode = 2
+offset_right = 560.0
+offset_bottom = 864.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "<player name>"
+horizontal_alignment = 2
+
+[node name="button_ready" type="Button" parent="game/game_lobby/game_lobby"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 220.0
+offset_top = -303.0
+offset_right = 988.0
+offset_bottom = -47.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 72
+text = "Click to READY"
+
+[node name="game_board" type="CanvasLayer" parent="game"]
+layer = 0
+follow_viewport_enabled = true
+
+[node name="game_board" type="Node2D" parent="game/game_board" node_paths=PackedStringArray("game_data")]
+script = ExtResource("6_km2eh")
+game_data = NodePath("../../game_data")
+
+[node name="game_camera" type="Camera2D" parent="game/game_board/game_board"]
 process_callback = 0
 script = ExtResource("2_j2eim")
 
-[node name="tile_board" type="TileMapLayer" parent="game/game/world"]
+[node name="tile_board" type="TileMapLayer" parent="game/game_board/game_board"]
 position = Vector2(-64, -64)
 tile_map_data = PackedByteArray("AAD9//3/AAAAAAAAAAD9//7/AAAAAAEAAAD9////AAAAAAAAAAD9/wAAAAAAAAAAAAD9/wEAAAAAAAAAAAD9/wIAAAAAAAEAAAD9/wMAAAAAAAAAAAD+//3/AAAAAAEAAAD+//7/AAAAAAAAAAD+////AAAAAAAAAAD+/wAAAAAAAAEAAAD+/wEAAAAAAAAAAAD+/wIAAAAAAAAAAAD+/wMAAAAAAAEAAAD///3/AAAAAAAAAAD///7/AAAAAAAAAAD/////AAABAAAAAAD//wAAAAAAAAAAAAD//wEAAAABAAAAAAD//wIAAAAAAAAAAAD//wMAAAAAAAAAAAAAAP3/AAAAAAAAAAAAAP7/AAAAAAAAAAAAAP//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAABAP3/AAAAAAAAAAABAP7/AAAAAAAAAAABAP//AAABAAAAAAABAAAAAAAAAAAAAAABAAEAAAABAAAAAAABAAIAAAAAAAAAAAABAAMAAAAAAAAAAAACAP3/AAAAAAEAAAACAP7/AAAAAAAAAAACAP//AAAAAAAAAAACAAAAAAAAAAEAAAACAAEAAAAAAAAAAAACAAIAAAAAAAAAAAACAAMAAAAAAAEAAAADAP3/AAAAAAAAAAADAP7/AAAAAAEAAAADAP//AAAAAAAAAAADAAAAAAAAAAAAAAADAAEAAAAAAAAAAAADAAIAAAAAAAEAAAADAAMAAAAAAAAAAAA=")
 tile_set = ExtResource("2_06ig3")
 script = ExtResource("5_m5usj")
 metadata/_edit_lock_ = true
 
-[node name="tiles" type="Node2D" parent="game/game/world"]
+[node name="tiles" type="Node2D" parent="game/game_board/game_board"]
 y_sort_enabled = true
 
-[node name="tile" type="Node2D" parent="game/game/world/tiles"]
+[node name="tile" type="Node2D" parent="game/game_board/game_board/tiles"]
 script = ExtResource("4_836ik")
 
-[node name="sprite_2d" type="Sprite2D" parent="game/game/world/tiles/tile"]
+[node name="sprite_2d" type="Sprite2D" parent="game/game_board/game_board/tiles/tile"]
 texture = ExtResource("3_2d37k")
 offset = Vector2(0, -64)
 region_enabled = true
 region_rect = Rect2(0, 0, 128, 256)
 
-[node name="pickable" type="Control" parent="game/game/world/tiles/tile"]
+[node name="pickable" type="Control" parent="game/game_board/game_board/tiles/tile"]
 layout_mode = 3
 anchor_left = 0.5
 anchor_top = 0.75
@@ -72,9 +155,10 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 metadata/_edit_use_anchors_ = true
 
-[node name="gui" type="CanvasLayer" parent="game/game"]
+[node name="gui" type="CanvasLayer" parent="game/game_board/game_board"]
+layer = 4
 
-[node name="play" type="Control" parent="game/game/gui"]
+[node name="play" type="Control" parent="game/game_board/game_board/gui"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -83,7 +167,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="game_timer" type="Label" parent="game/game/gui/play"]
+[node name="label_turn" type="Label" parent="game/game_board/game_board/gui/play"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -93,7 +177,7 @@ text = "Turn ## | Time Left: ##"
 horizontal_alignment = 1
 script = ExtResource("8_otm8r")
 
-[node name="tile_rack" type="ColorRect" parent="game/game/gui/play"]
+[node name="tile_rack" type="ColorRect" parent="game/game_board/game_board/gui/play"]
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 1.0
@@ -105,16 +189,16 @@ grow_vertical = 0
 color = Color(0.570611, 0.375719, 0.372228, 1)
 script = ExtResource("7_vqaxa")
 
-[node name="tile" type="Node2D" parent="game/game/gui/play/tile_rack"]
+[node name="tile" type="Node2D" parent="game/game_board/game_board/gui/play/tile_rack"]
 script = ExtResource("4_836ik")
 
-[node name="sprite_2d" type="Sprite2D" parent="game/game/gui/play/tile_rack/tile"]
+[node name="sprite_2d" type="Sprite2D" parent="game/game_board/game_board/gui/play/tile_rack/tile"]
 texture = ExtResource("3_2d37k")
 offset = Vector2(0, -64)
 region_enabled = true
 region_rect = Rect2(0, 0, 128, 256)
 
-[node name="pickable" type="Control" parent="game/game/gui/play/tile_rack/tile"]
+[node name="pickable" type="Control" parent="game/game_board/game_board/gui/play/tile_rack/tile"]
 layout_mode = 3
 anchor_left = 0.5
 anchor_top = 0.75
@@ -129,7 +213,7 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 metadata/_edit_use_anchors_ = true
 
-[node name="control" type="Control" parent="game/game/gui/play"]
+[node name="control" type="Control" parent="game/game_board/game_board/gui/play"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -142,88 +226,12 @@ offset_right = 492.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="lobby" type="Control" parent="game/game/gui"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="color_rect" type="ColorRect" parent="game/game/gui/lobby"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.623331, 0.594586, 0.585371, 1)
-
-[node name="panel_players" type="Panel" parent="game/game/gui/lobby"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.625
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="scroll_container" type="ScrollContainer" parent="game/game/gui/lobby/panel_players"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.1
-anchor_top = 0.1
-anchor_right = 0.9
-anchor_bottom = 0.9
-grow_horizontal = 2
-grow_vertical = 2
-horizontal_scroll_mode = 0
-vertical_scroll_mode = 4
-
-[node name="game_player_list" type="RichTextLabel" parent="game/game/gui/lobby/panel_players/scroll_container" node_paths=PackedStringArray("game_players")]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "<player list>
-"
-script = ExtResource("12_h4xlo")
-game_players = NodePath("../../../../../game_players")
-
-[node name="label_ready" type="RichTextLabel" parent="game/game/gui/lobby/panel_players/scroll_container/game_player_list"]
-layout_mode = 2
-offset_right = 560.0
-offset_bottom = 864.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "<ready>
-"
-horizontal_alignment = 2
-
-[node name="game_button_ready" type="Button" parent="game/game/gui/lobby" node_paths=PackedStringArray("game_players")]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 220.0
-offset_top = -303.0
-offset_right = 988.0
-offset_bottom = -47.0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 72
-text = "Click to READY"
-script = ExtResource("13_vvw4a")
-game_players = NodePath("../../../game_players")
-
-[node name="drag" type="CanvasLayer" parent="game/game"]
+[node name="drag" type="CanvasLayer" parent="game/game_board/game_board"]
 layer = 2
 follow_viewport_enabled = true
 
 [node name="gui" type="CanvasLayer" parent="."]
-layer = 4
+layer = 16
 
 [node name="menu_config" type="Control" parent="gui"]
 visible = false

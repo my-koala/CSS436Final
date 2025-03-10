@@ -46,7 +46,7 @@ var _state: State = State.SPLASH
 var _menu_config: MenuConfig = $gui/menu_config as MenuConfig
 
 @onready
-var _game: Game = $game/game as Game
+var _game: Game = $game as Game
 
 const TIMEOUT: float = 300.0
 var _timeout: float = 0.0

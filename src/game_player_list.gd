@@ -2,23 +2,23 @@
 extends RichTextLabel
 
 @export
-var game_players: GamePlayers = null:
+var game_data: GameData = null:
 	get:
-		return game_players
+		return game_data
 	set(value):
-		if game_players != value:
-			if is_instance_valid(game_players):
-				game_players.updated.disconnect(_on_game_players_updated)
-			game_players = value
-			if is_instance_valid(game_players):
-				game_players.updated.connect(_on_game_players_updated)
+		if game_data != value:
+			if is_instance_valid(game_data):
+				game_data.updated.disconnect(_on_game_data_updated)
+			game_data = value
+			if is_instance_valid(game_data):
+				game_data.updated.connect(_on_game_data_updated)
 
 @onready
 var _label_ready: RichTextLabel = $label_ready as RichTextLabel
 
 var _dirty: bool = false
 
-func _on_game_players_updated() -> void:
+func _on_game_data_updated() -> void:
 	_dirty = true
 
 func _process(delta: float) -> void:
@@ -28,7 +28,7 @@ func _process(delta: float) -> void:
 	if !is_visible_in_tree():
 		return
 	
-	if !is_instance_valid(game_players):
+	if !is_instance_valid(game_data):
 		return
 	
 	if !_dirty:
@@ -42,11 +42,11 @@ func _process(delta: float) -> void:
 	var a: Array[String] = []
 	var b: Array[String] = []
 	var c: Array[String] = []
-	for player_id: int in game_players.get_player_ids():
-		var player_name: String = game_players.get_player_name(player_id)
-		if game_players.get_player_spectator(player_id):
+	for player_id: int in game_data.get_player_ids():
+		var player_name: String = game_data.get_player_name(player_id)
+		if game_data.get_player_spectator(player_id):
 			a.append(player_name)
-		elif game_players.get_player_ready(player_id):
+		elif game_data.get_player_ready(player_id):
 			b.append(player_name)
 		else:
 			c.append(player_name)

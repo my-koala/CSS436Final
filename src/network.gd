@@ -92,8 +92,6 @@ func stop_server() -> Error:
 	print("Network | Stopped server.")
 	return OK
 
-signal _connection_updated()
-
 ## Asynchronously creates client and starts connection to a server.
 ## Returns OK if successfully created client.
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.

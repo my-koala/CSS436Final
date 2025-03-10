@@ -59,7 +59,7 @@ func _ready() -> void:
 	set_state(State.NONE)
 
 func _on_name_button_submit_pressed() -> void:
-	if GamePlayers.is_valid_player_name(get_player_name()):
+	if GameData.is_valid_player_name(get_player_name()):
 		set_state(State.NETWORK)
 		player_name_submitted.emit()
 
@@ -98,7 +98,7 @@ func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	
-	_name_button_submit.disabled = !GamePlayers.is_valid_player_name(_name_button_submit.name)
+	_name_button_submit.disabled = !GameData.is_valid_player_name(_name_button_submit.name)
 	
 	if multiplayer.has_multiplayer_peer():
 		if !multiplayer.is_server():
