@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=14 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
 [ext_resource type="Script" uid="uid://da0gfhno5f7d2" path="res://src/game_tiles.gd" id="7_h4xlo"]
 [ext_resource type="Script" uid="uid://3fibd4vboth" path="res://src/tile_rack.gd" id="7_vqaxa"]
+[ext_resource type="Script" uid="uid://cqbj0ustssojg" path="res://src/word_check.gd" id="7_vvw4a"]
 [ext_resource type="Script" uid="uid://dev6hqla35dfo" path="res://src/menu_config.gd" id="11_vvw4a"]
 
 [node name="main" type="Node"]
@@ -114,6 +115,10 @@ follow_viewport_enabled = true
 [node name="game_board" type="Node2D" parent="game/game_board" node_paths=PackedStringArray("_game_data")]
 script = ExtResource("6_km2eh")
 _game_data = NodePath("../../game_data")
+
+[node name="word_check" type="HTTPRequest" parent="game/game_board/game_board"]
+script = ExtResource("7_vvw4a")
+metadata/_custom_type_script = "uid://cqbj0ustssojg"
 
 [node name="game_tiles" type="Node" parent="game/game_board/game_board" node_paths=PackedStringArray("_game_data")]
 script = ExtResource("7_h4xlo")

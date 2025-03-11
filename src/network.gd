@@ -129,7 +129,7 @@ func stop_server() -> Error:
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if client could not be created.
 ## Returns ERR_CANT_CONNECT if client could not connect.
-func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
+func join_server(address: String = "127.0.0.1", port: int = 4000, unsafe: bool = false) -> Error:
 	# Return error if a connection is currently active.
 	if _multiplayer_api.has_multiplayer_peer():
 		push_error("Network (Client) | Failed to join server '%s:%d' (a connection is already active)." % [address, port])
@@ -151,7 +151,7 @@ func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
 		print("Network (Client) | Loaded certificate.")
 	
 	var tls_options: TLSOptions
-	if !is_instance_valid(certificate):
+	if unsafe || !is_instance_valid(certificate):
 		print("Network (Client) | Joining server without custom certificate.")
 		tls_options = null
 	else:
@@ -162,6 +162,8 @@ func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
 	var multiplayer_peer: WebSocketMultiplayerPeer = WebSocketMultiplayerPeer.new()
 	
 	var url: String = "wss://" + address + ":" + str(port)
+	if unsafe:
+		url = address + ":" + str(port)
 	var error: Error = multiplayer_peer.create_client(url, tls_options)
 	if error != OK:
 		push_error("Network (Client) | Failed to join server '%s:%d' (could not connect)." % [address, port])

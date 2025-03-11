@@ -74,8 +74,8 @@ func _on_multiplayer_server_disconnected() -> void:
 func is_active() -> bool:
 	return _mode != Mode.NONE
 
-func start_client(address: String, port: int, player_name: String = "Player") -> bool:
-	if await _network.join_server(address, port) != OK:
+func start_client(address: String, port: int, player_name: String = "Player", unsafe: bool = false) -> bool:
+	if await _network.join_server(address, port, unsafe) != OK:
 		return false
 	
 	_game_data.set_local_player_name(player_name)
