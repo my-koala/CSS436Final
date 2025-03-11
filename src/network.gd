@@ -73,7 +73,7 @@ func host_server(port: int = 4000) -> Error:
 		print("Network (Server) | Could not load private key (invalid file format).")
 		key = null
 	else:
-		print("Network (Server) | Loaded certificate.")
+		print("Network (Server) | Loaded private key.")
 	
 	# Load full-chain certificate.
 	var certificate: X509Certificate = X509Certificate.new()
@@ -89,10 +89,10 @@ func host_server(port: int = 4000) -> Error:
 	
 	var tls_options: TLSOptions = null
 	if !is_instance_valid(key) || !is_instance_valid(certificate):
-		print("Network (Server) | Hosting server without key and certificate.")
+		print("Network (Server) | Hosting server without private key and certificate.")
 		tls_options = null
 	else:
-		print("Network (Server) | Hosting server with key and certificate.")
+		print("Network (Server) | Hosting server with private key and certificate.")
 		tls_options = TLSOptions.server(key, certificate)
 	
 	# Create server and return error.
