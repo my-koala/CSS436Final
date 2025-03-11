@@ -74,8 +74,8 @@ func _on_multiplayer_server_disconnected() -> void:
 func is_active() -> bool:
 	return _mode != Mode.NONE
 
-func start_client(address: String, port: int, player_name: String = "Player") -> bool:
-	if await _network.join_server(address, port) != OK:
+func start_client(address: String, port: int, player_name: String = "Player", check_cert: bool = true) -> bool:
+	if await _network.join_server(address, port, check_cert) != OK:
 		return false
 	
 	_game_data.set_local_player_name(player_name)
@@ -86,8 +86,8 @@ func start_client(address: String, port: int, player_name: String = "Player") ->
 	client_started.emit()
 	return true
 
-func start_server(port: int, spectator: bool = true, player_name: String = "Host") -> bool:
-	if _network.host_server(port) != OK:
+func start_server(port: int, spectator: bool = true, player_name: String = "Host", check_cert: bool = true) -> bool:
+	if _network.host_server(port, check_cert) != OK:
 		return false
 	
 	_game_data.set_local_player_name(player_name)

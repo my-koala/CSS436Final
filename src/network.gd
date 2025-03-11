@@ -13,6 +13,8 @@ class_name Network
 # TODO: X509Certificate
 
 const MAX_PLAYERS: int = 100
+const CERTIFICATE_PATH: String = "./certificate.pem"
+const PRIVATE_KEY_PATH: String = "./privkey.pem"
 
 ## Path to node to set as root for multiplayer branch.
 ## Leave null for scene tree root.
@@ -57,15 +59,38 @@ func is_client() -> bool:
 ## Returns OK if successfully created server.
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if server could not be created.
-func host_server(port: int = 4000) -> Error:
+func host_server(port: int = 4000, check_cert: bool = true) -> Error:
 	# Return error if a connection is currently active.
 	if _multiplayer_api.has_multiplayer_peer():
 		push_error("Network | Failed to host server on port %d: a connection is already active." % [port])
 		return ERR_ALREADY_IN_USE
 	
+	var tls_options: TLSOptions = null
+	
+	if check_cert:
+		var key: CryptoKey = CryptoKey.new()
+		if FileAccess.file_exists(PRIVATE_KEY_PATH):
+			if key.load(PRIVATE_KEY_PATH) == OK:
+				print("Network | Server: loaded private key.")
+			else:
+				print("Network | Server: could not load private key (file read failed).")
+		else:
+				print("Network | Server: could not load private key (file does not exist).")
+		
+		var certificate: X509Certificate = X509Certificate.new()
+		if FileAccess.file_exists(CERTIFICATE_PATH):
+			if certificate.load(CERTIFICATE_PATH) == OK:
+				print("Network | Server: loaded certificate.")
+			else:
+				print("Network | Server: could not load certificate (file read failed).")
+		else:
+			print("Network | Server: could not load certificate (file does not exist).")
+		
+		tls_options = TLSOptions.server(key, certificate)
+	
 	# Create server and return error.
 	var multiplayer_peer: WebSocketMultiplayerPeer = WebSocketMultiplayerPeer.new()
-	var error: Error = multiplayer_peer.create_server(port, "*", null)
+	var error: Error = multiplayer_peer.create_server(port, "*", tls_options)
 	
 	if error == OK:
 		_multiplayer_api.multiplayer_peer = multiplayer_peer
@@ -97,16 +122,30 @@ func stop_server() -> Error:
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if client could not be created.
 ## Returns ERR_CANT_CONNECT if client could not connect.
-func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
+func join_server(address: String = "127.0.0.1", port: int = 4000, check_cert: bool = true) -> Error:
 	# Return error if a connection is currently active.
 	if _multiplayer_api.has_multiplayer_peer():
 		push_error("Network | Failed to join server '%s:%d': a connection is already active." % [address, port])
 		return ERR_ALREADY_IN_USE
 	
+	var tls_options: TLSOptions = null
+	
+	if check_cert:
+		var certificate: X509Certificate = X509Certificate.new()
+		if FileAccess.file_exists(CERTIFICATE_PATH):
+			if certificate.load(CERTIFICATE_PATH) == OK:
+				print("Network | Client: loaded certificate.")
+			else:
+				print("Network | Client: could not load certificate (file read failed).")
+		else:
+			print("Network | Client: could not load certificate (file does not exist).")
+		
+		tls_options = TLSOptions.client(certificate)
+	
 	# Create client and return error.
 	var multiplayer_peer: WebSocketMultiplayerPeer = WebSocketMultiplayerPeer.new()
 	
-	var error: Error = multiplayer_peer.create_client(address + ":" + str(port), null)
+	var error: Error = multiplayer_peer.create_client(address + ":" + str(port), tls_options)
 	if error != OK:
 		push_error("Network | Failed to join server '%s:%d': could not connect." % [address, port])
 		return error

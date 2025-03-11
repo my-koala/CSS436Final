@@ -50,7 +50,7 @@ extends Node
 #   players joining, show list of players
 
 const DEFAULT_SERVER_PORT: int = 43517
-const DEFAULT_SERVER_ADDRESS: String = "127.0.0.1"
+const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"
 
 enum State {
 	SPLASH,
@@ -68,6 +68,8 @@ var _game: Game = $game as Game
 
 const TIMEOUT: float = 300.0
 var _timeout: float = 0.0
+
+var _check_cert: bool = true
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -93,19 +95,21 @@ func _ready() -> void:
 	
 	var server: bool = false
 	
-	var auto_connect: bool = false
+	var auto_connect: bool = true
 	var address: String = DEFAULT_SERVER_ADDRESS
 	var port: int = DEFAULT_SERVER_PORT
 	
+	if args.has("cert"):
+		_check_cert = args["check-cert"] == "true"
 	if args.has("auto-connect"):
-		auto_connect = true
+		auto_connect = args["auto-connect"] == "true"
 	if args.has("address"):
 		address = args["address"]
 	if args.has("server"):
 		server = true
 	
 	if server:
-		if !_game.start_server(port):
+		if !_game.start_server(port, true, "Host", _check_cert):
 			push_error("Error hosting server!")
 			get_tree().quit(1)
 			return
@@ -128,7 +132,7 @@ func _on_game_client_stopped() -> void:
 	_menu_config.set_state(MenuConfig.State.NETWORK)
 
 func _on_menu_config_network_join_request() -> void:
-	_game.start_client(_menu_config.get_network_address(), _menu_config.get_network_port(), _menu_config.get_player_name())
+	_game.start_client(_menu_config.get_network_address(), _menu_config.get_network_port(), _menu_config.get_player_name(), _check_cert)
 
 func set_state(state: State) -> void:
 	_state = state
