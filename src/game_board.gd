@@ -23,7 +23,7 @@ enum SubmissionResult {
 	TILES_OVERLAPPING,
 	TILES_REDUNDANT,
 	TILES_NOT_COLLINEAR,
-	TILES_NOT_CONTINOUS,
+	TILES_NOT_CONTIGUOUS,
 	TILES_NOT_CONNECTED,
 	FIRST_CENTER,
 	INVALID_WORD,
@@ -223,42 +223,51 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 				_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_REDUNDANT)
 				return SubmissionResult.TILES_REDUNDANT# game code problem
 	
-	# Check tile collinearity and continuity.
-	if tile_positions.size() > 1:
-		# Get component-wise min and max (upper-left and bottom-right 2D rect).
-		var tile_rect_min: Vector2i = tile_positions[0]
-		var tile_rect_max: Vector2i = tile_positions[0]
-		for tile_position: Vector2i in tile_positions:
-			tile_rect_min = tile_rect_min.min(tile_position)
-			tile_rect_max = tile_rect_max.max(tile_position)
-		
-		# If both axis components are non-zero, tiles are not collinear.
-		var axis: Vector2i = (tile_rect_max - tile_rect_min).mini(1)
-		if axis.x != 0 && axis.y != 0:
-			_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_COLLINEAR)
-			return SubmissionResult.TILES_NOT_COLLINEAR
-		
-		# NOTE: axis is either Vector2i.DOWN or Vector2i.RIGHT
-		assert(axis == Vector2i.DOWN || axis == Vector2i.RIGHT)
-		
-		# Get both ends of tile positions.
-		var tile_position_min: Vector2i = tile_positions[0]
-		var tile_position_max: Vector2i = tile_positions[0]
-		for tile_position: Vector2i in tile_positions:
-			if tile_position < tile_position_min:
-				tile_position_min = tile_position
-			elif tile_position > tile_position_max:
-				tile_position_max = tile_position
-		
-		# Step through the tiles from min to max.
-		var step: int = 1
-		var length: int = (tile_position_max - tile_position_min)[axis.max_axis_index()]
-		while step < length:
-			var tile_position: Vector2i = (step * axis) + tile_position_min
-			if !submission.has(tile_position) && !_tile_board.has_tile_at(tile_position):
-				_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_CONTINOUS)
-				return SubmissionResult.TILES_NOT_CONTINOUS
-			step += 1
+	var tile_major_axis: Vector2i = Vector2i.RIGHT# Valid submission has all tiles on one major axis.
+	var tile_major_axis_min: Vector2i = tile_positions[0]# Min tile on major axis (including board tiles)
+	var tile_major_axis_max: Vector2i = tile_positions[0]# Max tile on major axis (including board tiles)
+	var tile_minor_axis: Vector2i = Vector2i.DOWN# Not the major axis.
+	
+	# Check if tiles are collinear and contiguous.
+	# Get component-wise min and max (upper-left and bottom-right 2D rect).
+	var tile_rect_min: Vector2i = tile_positions[0]
+	var tile_rect_max: Vector2i = tile_positions[0]
+	for tile_position: Vector2i in tile_positions:
+		tile_rect_min = tile_rect_min.min(tile_position)
+		tile_rect_max = tile_rect_max.max(tile_position)
+	
+	# If both axis components are non-zero, tiles are not collinear.
+	var tile_rect_delta: Vector2i = (tile_rect_max - tile_rect_min).mini(1)
+	if tile_rect_delta == Vector2i.ONE:
+		_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_COLLINEAR)
+		return SubmissionResult.TILES_NOT_COLLINEAR
+	
+	if submission.size() > 1:
+		tile_major_axis = tile_rect_delta
+		tile_minor_axis = Vector2i.ONE - tile_major_axis
+	
+	# NOTE: An axis is either Vector2i.DOWN or Vector2i.RIGHT.
+	assert(tile_major_axis == Vector2i.DOWN || tile_major_axis == Vector2i.RIGHT)
+	assert(tile_minor_axis == Vector2i.DOWN || tile_minor_axis == Vector2i.RIGHT)
+	assert(tile_major_axis != tile_minor_axis)
+	
+	# Get major axis min and max.
+	while true:
+		var tile_position: Vector2i = tile_major_axis_min - tile_major_axis
+		if !submission.has(tile_position) && !_tile_board.has_tile_at(tile_position):
+			break
+		tile_major_axis_min = tile_position
+	
+	while true:
+		var tile_position: Vector2i = tile_major_axis_max + tile_major_axis
+		if !submission.has(tile_position) && !_tile_board.has_tile_at(tile_position):
+			break
+		tile_major_axis_max = tile_position
+	
+	# If axis min/max is more/less than rect min/max, tiles are not contiguous.
+	if tile_major_axis_min > tile_rect_min || tile_major_axis_max < tile_rect_max:
+		_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_CONTIGUOUS)
+		return SubmissionResult.TILES_NOT_CONTIGUOUS
 	
 	# Check for center tile position (if first submission).
 	if _tile_board.is_empty():
@@ -282,15 +291,51 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 			_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_CONNECTED)
 			return SubmissionResult.TILES_NOT_CONNECTED
 	
-	# TODO: Word check.
 	# Make code that generates all words that are created with this submission.
 	# Words are 2 or more consecutive tiles in left->right and top->bottom directions.
-	# submission dictionary (submission tiles), _tile_board for getting board tiles
-	var words: Array[String] = ["koala", "throw"]
-	# <insert code here>
+	var words: Array[String] = []
+	# Get major axis word.
+	var word_builder: String = ""
+	var tile_major_axis_position: Vector2i = tile_major_axis_min
+	while tile_major_axis_position <= tile_major_axis_max:
+		if _tile_board.has_tile_at(tile_major_axis_position):
+			word_builder += Tile.get_face_string(_tile_board.get_tile_at(tile_major_axis_position))
+		elif submission.has(tile_major_axis_position):
+			word_builder += Tile.get_face_string(submission[tile_major_axis_position])
+		tile_major_axis_position += tile_major_axis
+	if word_builder.length() > 1:
+		words.append(word_builder)
 	
-	# TODO: Check word with API via HTTP request.
-	# james can port dong's code here
+	# Get minor axis words (only from submission tiles!)
+	for tile_position: Vector2i in tile_positions:
+		word_builder = Tile.get_face_string(submission[tile_position])
+		
+		# Navigate to minor axis min.
+		var tile_minor_axis_min: Vector2i = tile_position
+		while true:
+			tile_minor_axis_min -= tile_minor_axis
+			if _tile_board.has_tile_at(tile_minor_axis_min):
+				word_builder = Tile.get_face_string(_tile_board.get_tile_at(tile_minor_axis_min)) + word_builder
+			elif submission.has(tile_minor_axis_min):
+				word_builder = Tile.get_face_string(submission[tile_minor_axis_min]) + word_builder
+			else:
+				break
+		
+		# Navigate to minor axis max.
+		var tile_minor_axis_max: Vector2i = tile_position
+		while true:
+			tile_minor_axis_max += tile_minor_axis
+			if _tile_board.has_tile_at(tile_minor_axis_max):
+				word_builder += Tile.get_face_string(_tile_board.get_tile_at(tile_minor_axis_max))
+			elif submission.has(tile_minor_axis_max):
+				word_builder += Tile.get_face_string(submission[tile_minor_axis_max])
+			else:
+				break
+		
+		if word_builder.length() > 1:
+			words.append(word_builder)
+	
+	# Check words with WordCheck.
 	for word: String in words:
 		if !(await _word_check.get_word_valid(word)):
 			_rpc_submit_result.rpc_id(player_id, SubmissionResult.INVALID_WORD)
