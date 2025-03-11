@@ -5,16 +5,14 @@ class_name Network
 
 ## MyKoala's wrapper node for multiplayer.
 
-# NOTE: Offline server: 127.0.0.1:4000
+# NOTE: Offline: 127.0.0.1
 # NOTE: Supplied multiplayer.multiplayer_peer must be connecting or connected.
-# NOTE: This uses Web Socket Multiplayer.
-
-# TODO: Steam integration.
-# TODO: X509Certificate
+# NOTE: Currently configured using Web Socket Multiplayer.
 
 const MAX_PLAYERS: int = 100
-const CERTIFICATE_PATH: String = "./certificate.pem"
-const PRIVATE_KEY_PATH: String = "./privkey.pem"
+
+const CERTIFICATE_PATH: String = "res://certificate.pem"
+const PRIVATE_KEY_PATH: String = "private_key.pem"
 
 ## Path to node to set as root for multiplayer branch.
 ## Leave null for scene tree root.
@@ -59,33 +57,42 @@ func is_client() -> bool:
 ## Returns OK if successfully created server.
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if server could not be created.
-func host_server(port: int = 4000, check_cert: bool = true) -> Error:
+func host_server(port: int = 4000) -> Error:
 	# Return error if a connection is currently active.
 	if _multiplayer_api.has_multiplayer_peer():
-		push_error("Network | Failed to host server on port %d: a connection is already active." % [port])
+		push_error("Network (Server) | Failed to host server on port %d (a connection is already active)." % [port])
 		return ERR_ALREADY_IN_USE
 	
-	var tls_options: TLSOptions = null
+	# Load private key.
+	var key: CryptoKey = CryptoKey.new()
+	var key_file: FileAccess = FileAccess.open(PRIVATE_KEY_PATH, FileAccess.READ)
+	if !is_instance_valid(key_file):
+		print("Network (Server) | Could not load private key (file read failed).")
+		key = null
+	elif key.load_from_string(key_file.get_as_text()) != OK:
+		print("Network (Server) | Could not load private key (invalid file format).")
+		key = null
+	else:
+		print("Network (Server) | Loaded certificate.")
 	
-	if check_cert:
-		var key: CryptoKey = CryptoKey.new()
-		if FileAccess.file_exists(PRIVATE_KEY_PATH):
-			if key.load(PRIVATE_KEY_PATH) == OK:
-				print("Network | Server: loaded private key.")
-			else:
-				print("Network | Server: could not load private key (file read failed).")
-		else:
-				print("Network | Server: could not load private key (file does not exist).")
-		
-		var certificate: X509Certificate = X509Certificate.new()
-		if FileAccess.file_exists(CERTIFICATE_PATH):
-			if certificate.load(CERTIFICATE_PATH) == OK:
-				print("Network | Server: loaded certificate.")
-			else:
-				print("Network | Server: could not load certificate (file read failed).")
-		else:
-			print("Network | Server: could not load certificate (file does not exist).")
-		
+	# Load full-chain certificate.
+	var certificate: X509Certificate = X509Certificate.new()
+	var certificate_file: FileAccess = FileAccess.open(CERTIFICATE_PATH, FileAccess.READ)
+	if !is_instance_valid(certificate_file):
+		print("Network (Server) | Could not load certificate (file read failed).")
+		certificate = null
+	elif certificate.load_from_string(certificate_file.get_as_text()) != OK:
+		print("Network (Server) | Could not load certificate (invalid file format).")
+		certificate = null
+	else:
+		print("Network (Server) | Loaded certificate.")
+	
+	var tls_options: TLSOptions = null
+	if !is_instance_valid(key) || !is_instance_valid(certificate):
+		print("Network (Server) | Hosting server without key and certificate.")
+		tls_options = null
+	else:
+		print("Network (Server) | Hosting server with key and certificate.")
 		tls_options = TLSOptions.server(key, certificate)
 	
 	# Create server and return error.
@@ -93,10 +100,10 @@ func host_server(port: int = 4000, check_cert: bool = true) -> Error:
 	var error: Error = multiplayer_peer.create_server(port, "*", tls_options)
 	
 	if error == OK:
+		print("Network (Server) | Hosted server on port %d." % [port])
 		_multiplayer_api.multiplayer_peer = multiplayer_peer
-		print("Network | Hosted server on port %d." % [port])
 	else:
-		push_error("Network | Failed to host server on port %d: server could not be created." % [port])
+		push_error("Network (Server) | Failed to host server on port %d (server could not be created)." % [port])
 	return error
 
 ## Stops active server.
@@ -105,7 +112,7 @@ func host_server(port: int = 4000, check_cert: bool = true) -> Error:
 func stop_server() -> Error:
 	# Return error if not currently hosting a server.
 	if !_multiplayer_api.has_multiplayer_peer() || !_multiplayer_api.is_server():
-		push_error("Network | Failed to stop server: not currently hosting a server.")
+		push_error("Network (Server) | Failed to stop server (not currently hosting a server).")
 		return ERR_DOES_NOT_EXIST
 	
 	# Disconnect all peers and stop server.
@@ -114,7 +121,7 @@ func stop_server() -> Error:
 		_multiplayer_api.multiplayer_peer.disconnect_peer(peer_id, false)
 	_multiplayer_api.multiplayer_peer.close()
 	
-	print("Network | Stopped server.")
+	print("Network (Server) | Stopped server.")
 	return OK
 
 ## Asynchronously creates client and starts connection to a server.
@@ -122,45 +129,57 @@ func stop_server() -> Error:
 ## Returns ERR_ALREADY_IN_USE if a connection is currently active.
 ## Returns ERR_CANT_CREATE if client could not be created.
 ## Returns ERR_CANT_CONNECT if client could not connect.
-func join_server(address: String = "127.0.0.1", port: int = 4000, check_cert: bool = true) -> Error:
+func join_server(address: String = "127.0.0.1", port: int = 4000) -> Error:
 	# Return error if a connection is currently active.
 	if _multiplayer_api.has_multiplayer_peer():
-		push_error("Network | Failed to join server '%s:%d': a connection is already active." % [address, port])
+		push_error("Network (Client) | Failed to join server '%s:%d' (a connection is already active)." % [address, port])
 		return ERR_ALREADY_IN_USE
 	
-	var tls_options: TLSOptions = null
+	# NOTE: Client certificate is optional.
+	# See: https://github.com/godotengine/godot/blob/master/thirdparty/certs/ca-certificates.crt
 	
-	if check_cert:
-		var certificate: X509Certificate = X509Certificate.new()
-		if FileAccess.file_exists(CERTIFICATE_PATH):
-			if certificate.load(CERTIFICATE_PATH) == OK:
-				print("Network | Client: loaded certificate.")
-			else:
-				print("Network | Client: could not load certificate (file read failed).")
-		else:
-			print("Network | Client: could not load certificate (file does not exist).")
-		
+	# Load certificate.
+	var certificate: X509Certificate = X509Certificate.new()
+	var certificate_file: FileAccess = FileAccess.open(CERTIFICATE_PATH, FileAccess.READ)
+	if !is_instance_valid(certificate_file):
+		print("Network (Client) | Could not load certificate (file read failed).")
+		certificate = null
+	elif certificate.load_from_string(certificate_file.get_as_text()) != OK:
+		print("Network (Client) | Could not load certificate (invalid file format).")
+		certificate = null
+	else:
+		print("Network (Client) | Loaded certificate.")
+	
+	var tls_options: TLSOptions
+	if !is_instance_valid(certificate):
+		print("Network (Client) | Joining server without custom certificate.")
+		tls_options = null
+	else:
+		print("Network (Client) | Joining server with custom certificate.")
 		tls_options = TLSOptions.client(certificate)
 	
 	# Create client and return error.
 	var multiplayer_peer: WebSocketMultiplayerPeer = WebSocketMultiplayerPeer.new()
 	
-	var error: Error = multiplayer_peer.create_client(address + ":" + str(port), tls_options)
+	var url: String = "wss://" + address + ":" + str(port)
+	var error: Error = multiplayer_peer.create_client(url, tls_options)
 	if error != OK:
-		push_error("Network | Failed to join server '%s:%d': could not connect." % [address, port])
+		push_error("Network (Client) | Failed to join server '%s:%d' (could not connect)." % [address, port])
 		return error
 	
 	_multiplayer_api.multiplayer_peer = multiplayer_peer
+	print("Network (Client) | Joining server '%s:%d'..." % [address, port])
+	
 	while _multiplayer_api.multiplayer_peer.get_connection_status() == MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTING:
 		await get_tree().physics_frame
 	
 	if _multiplayer_api.multiplayer_peer.get_connection_status() != MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTED:
-		push_error("Network | Failed to join server '%s:%d': disconnected." % [address, port])
+		push_error("Network (Client) | Failed to join server '%s:%d' (disconnected)." % [address, port])
 		_multiplayer_api.multiplayer_peer.close()
 		_multiplayer_api.set_deferred(&"multiplayer_peer", null)
 		return ERR_CANT_CONNECT
 	
-	print("Network | Joined server '%s:%d'." % [address, port])
+	print("Network (Client) | Joined server '%s:%d'." % [address, port])
 	return error
 
 ## Stops client and disconnects from server.
@@ -169,10 +188,10 @@ func join_server(address: String = "127.0.0.1", port: int = 4000, check_cert: bo
 func quit_server() -> Error:
 	# Return error if not connected to a server.
 	if !_multiplayer_api.has_multiplayer_peer() || _multiplayer_api.is_server():
-		push_error("Network | Failed to quit server: not currently connected to a server.")
+		push_error("Network (Client) | Failed to quit server (not currently connected to a server).")
 		return ERR_DOES_NOT_EXIST
 	
 	# Stop connection to server.
+	print("Network (Client) | Quit server.")
 	_multiplayer_api.multiplayer_peer.close()
-	print("Network | Disconnected from server.")
 	return OK

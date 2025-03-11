@@ -99,17 +99,15 @@ func _ready() -> void:
 	var address: String = DEFAULT_SERVER_ADDRESS
 	var port: int = DEFAULT_SERVER_PORT
 	
-	if args.has("cert"):
-		_check_cert = args["check-cert"] == "true"
 	if args.has("auto-connect"):
-		auto_connect = args["auto-connect"] == "true"
+		auto_connect = args["auto-connect"].to_lower() == "true"
 	if args.has("address"):
 		address = args["address"]
 	if args.has("server"):
 		server = true
 	
 	if server:
-		if !_game.start_server(port, true, "Host", _check_cert):
+		if !_game.start_server(port, true, "Host"):
 			push_error("Error hosting server!")
 			get_tree().quit(1)
 			return
@@ -132,7 +130,7 @@ func _on_game_client_stopped() -> void:
 	_menu_config.set_state(MenuConfig.State.NETWORK)
 
 func _on_menu_config_network_join_request() -> void:
-	_game.start_client(_menu_config.get_network_address(), _menu_config.get_network_port(), _menu_config.get_player_name(), _check_cert)
+	_game.start_client(_menu_config.get_network_address(), _menu_config.get_network_port(), _menu_config.get_player_name())
 
 func set_state(state: State) -> void:
 	_state = state
