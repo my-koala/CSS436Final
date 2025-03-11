@@ -333,7 +333,6 @@ text = "Server Address:"
 [node name="line_edit_address" type="LineEdit" parent="gui/menu_config/network/v_box_container/address"]
 layout_mode = 2
 placeholder_text = "Address"
-max_length = 10
 context_menu_enabled = false
 emoji_menu_enabled = false
 
