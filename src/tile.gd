@@ -38,7 +38,22 @@ var _label_points: Label = $display/label_points as Label
 
 # TODO: probably a big match statement
 func get_face_points() -> int:
-	return 1
+	match face:
+		0 | 4 | 8 | 14 | 20 | 18 | 19 | 21:  # A, E, I, O, U, L, N, S, T, R
+			return 2
+		3 | 6:  # D, G
+			return 3
+		1 | 2 | 12 | 15:  # B, C, M, P
+			return 4
+		5 | 7 | 17 | 22 | 24:  # F, H, V, W, Y
+			return 5
+		10:  # K
+			return 6
+		9 | 23:  # J, X
+			return 9
+		16 | 25:  # Q, Z
+			return 11
+	return 0  # Default case
 
 func _ready() -> void:
 	if Engine.is_editor_hint():

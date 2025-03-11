@@ -5,8 +5,7 @@
 
 [node name="tile" type="Node2D"]
 script = ExtResource("1_42nim")
-locked = null
-locked_modulate = null
+face = 15
 
 [node name="sprite_2d" type="Sprite2D" parent="."]
 texture = ExtResource("2_hcduw")
@@ -40,7 +39,7 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 64
-text = "A"
+text = "P"
 horizontal_alignment = 1
 vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
@@ -55,9 +54,10 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 32
-text = "1"
+text = "3"
 horizontal_alignment = 2
 metadata/_edit_use_anchors_ = true
+metadata/_edit_group_ = true
 
 [node name="pickable" type="Control" parent="."]
 layout_mode = 3
