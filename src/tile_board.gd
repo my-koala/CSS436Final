@@ -116,6 +116,12 @@ func get_tile_at(coordinates: Vector2i) -> Tile:
 func has_tile_at(coordinates: Vector2i) -> bool:
 	return _tiles.has(coordinates)
 
+func has_tile_neighor_at(coordinates: Vector2i) -> bool:
+	return (_tiles.has(coordinates + Vector2i.DOWN) ||
+			_tiles.has(coordinates + Vector2i.UP) ||
+			_tiles.has(coordinates + Vector2i.LEFT) ||
+			_tiles.has(coordinates + Vector2i.RIGHT))
+
 func is_empty() -> bool:
 	return _tiles.is_empty()
 

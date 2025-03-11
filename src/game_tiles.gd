@@ -82,6 +82,11 @@ func assign_tiles() -> void:
 				player_tiles.append(tile_face)
 			_game_data.set_player_tiles(player_id, player_tiles)
 
+func recall_tiles() -> void:
+	var tiles: Array[Tile] = _player_tiles_board.values()
+	for tile: Tile in tiles:
+		_move_tile_to_hotbar(tile)
+
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
@@ -134,10 +139,10 @@ func _physics_process(delta: float) -> void:
 	if _tile_board_dirty:
 		_tile_board_dirty = false
 		# Check for tile conflicts.
-		for coordinates: Vector2i in _player_tiles_board:
-			if _tile_board.has_tile_at(coordinates):
+		for tile_position: Vector2i in _player_tiles_board:
+			if _tile_board.has_tile_at(tile_position):
 				# TODO: Conflict found, return tile to hotbar. TODO
-				_move_tile_to_hotbar(_player_tiles_board[coordinates])
+				_move_tile_to_hotbar(_player_tiles_board[tile_position])
 	
 	if is_dragging_tile():
 		_player_tile_drag.global_position = _player_tile_drag.get_global_mouse_position()
@@ -173,18 +178,18 @@ func _tile_drag_start(tile: Tile) -> void:
 	_player_tile_drag.reset_physics_interpolation()
 
 func _tile_drag_stop() -> void:
-	var coordinates: Vector2i = _tile_board.local_to_map(_tile_board.to_local(_player_tile_drag.global_position))
-	var tile_conflict: bool = _tile_board.has_tile_at(coordinates) || _player_tiles_board.has(coordinates)
+	var tile_position: Vector2i = _tile_board.local_to_map(_tile_board.to_local(_player_tile_drag.global_position))
+	var tile_conflict: bool = _tile_board.has_tile_at(tile_position) || _player_tiles_board.has(tile_position)
 	var hotbar_hovered: bool = _tile_hotbar.get_global_rect().has_point(_tile_hotbar.get_global_mouse_position())
 	
 	if tile_conflict || hotbar_hovered:
 		_move_tile_to_hotbar(_player_tile_drag)
 	else:
-		_move_tile_to_board(_player_tile_drag, coordinates)
+		_move_tile_to_board(_player_tile_drag, tile_position)
 	
 	_player_tile_drag = null
 
-func _move_tile_to_board(tile: Tile, coordinates: Vector2i) -> bool:
+func _move_tile_to_board(tile: Tile, tile_position: Vector2i) -> bool:
 	var key: Variant = _player_tiles_board.find_key(tile)
 	if is_instance_valid(key):
 		push_error("Board already has tile!")
@@ -196,9 +201,9 @@ func _move_tile_to_board(tile: Tile, coordinates: Vector2i) -> bool:
 	if is_instance_valid(parent):
 		parent.remove_child(tile)
 	_tile_board.add_child(tile)
-	tile.global_position = _tile_board.get_snap_position(coordinates)
+	tile.global_position = _tile_board.get_snap_position(tile_position)
 	tile.reset_physics_interpolation()
-	_player_tiles_board[coordinates] = tile
+	_player_tiles_board[tile_position] = tile
 	return true
 
 func _move_tile_to_hotbar(tile: Tile) -> bool:

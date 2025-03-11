@@ -13,42 +13,6 @@ extends Node
 # word check algorithm (prahas)
 # http request for word verification
 
-# TODO:
-# setup WSS connections
-# create Let's Encrypt certificate, export using OpenSSL, load onto server along with private key
-# see TLSOptions
-# https://docs.godotengine.org/en/4.4/tutorials/networking/ssl_certificates.html
-
-# i think i need a DockerFile for running on docker container
-# https://github.com/rivet-gg/godot-docker/blob/main/Dockerfile
-# https://learn.microsoft.com/en-us/azure/container-apps/quickstart-code-to-cloud?tabs=bash%2Ccsharp
-# https://docs.docker.com/reference/dockerfile/
-
-# look into websocket multiplayer
-# server can run web host, since its a linux app (and not web)
-
-# server will run headless on azure docker container, probably linux
-# user clients will run on azure web apps, github, and itchio
-# use some sort of dictionary api, or use our own database
-
-# on first game bootup, check if client or server.
-# probably cmdline arg --is_server=true
-# see OS.get_cmdline_args()
-
-# if client
-#    boot to title screen with prompt for display name
-#    connect to server on name submit
-#    once connected:
-#       show list of players that have joined
-#       ready button, when every player is ready, game starts
-# 
-
-# tiles have to be sprites, snapped to tile map
-
-# game states
-# lobby (main menu)
-#   players joining, show list of players
-
 const DEFAULT_SERVER_PORT: int = 43517
 const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"
 

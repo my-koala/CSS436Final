@@ -24,6 +24,7 @@ enum SubmissionResult {
 	TILES_REDUNDANT,
 	TILES_NOT_COLLINEAR,
 	TILES_NOT_CONTINOUS,
+	TILES_NOT_CONNECTED,
 	FIRST_CENTER,
 	INVALID_WORD,
 }
@@ -40,16 +41,14 @@ var active: bool = false
 
 @onready
 var _game_tiles: GameTiles = $game_tiles as GameTiles
-
 @onready
 var _tile_board: TileBoard = $tile_board as TileBoard
-
 @onready
 var _gui_label_turn: Label = $gui/play/label_turn as Label
-
 @onready
 var _button_submit: Button = $gui/play/button_submit as Button
-
+@onready
+var _button_recall: Button = $gui/play/button_recall as Button
 @onready
 var _word_check: WordCheck = $word_check as WordCheck
 
@@ -95,6 +94,10 @@ func _ready() -> void:
 	
 	_game_data.updated.connect(_on_game_data_updated)
 	_button_submit.pressed.connect(_on_button_submit_pressed)
+	_button_recall.pressed.connect(_on_button_recall_pressed)
+
+func _on_button_recall_pressed() -> void:
+	_game_tiles.recall_tiles()
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -267,9 +270,18 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 			_rpc_submit_result.rpc_id(player_id, SubmissionResult.FIRST_CENTER)
 			return SubmissionResult.FIRST_CENTER
 	
-	# Prahas:
-	# TODO: Check if connects to tiles already on the board.
-	# <insert code here>
+	# Check if connects to tiles already on the board.
+	if !_tile_board.is_empty():
+		var check_connectivity: bool = false
+		for tile_position: Vector2i in tile_positions:
+			var check: bool = false
+			if _tile_board.has_tile_neighor_at(tile_position):
+				check_connectivity = true
+				break
+		if !check_connectivity:
+			_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_CONNECTED)
+			return SubmissionResult.TILES_NOT_CONNECTED
+	
 	# TODO: Word check.
 	# Make code that generates all words that are created with this submission.
 	# Words are 2 or more consecutive tiles in left->right and top->bottom directions.
