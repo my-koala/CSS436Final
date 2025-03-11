@@ -130,5 +130,6 @@ func _on_multiplayer_server_disconnected() -> void:
 	_clear_tiles()
 
 func _on_multiplayer_peer_connected(player_id: int) -> void:
-	for coordinates: Vector2i in _tiles:
-		_rpc_add_tile.rpc_id(player_id, coordinates, _tiles[coordinates].face)
+	if is_multiplayer_authority():
+		for coordinates: Vector2i in _tiles:
+			_rpc_add_tile.rpc_id(player_id, coordinates, _tiles[coordinates].face)
