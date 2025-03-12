@@ -34,7 +34,7 @@ var _tile_board_dirty: bool = false
 @onready
 var _tile_drag_layer: CanvasLayer = $"../tile_drag_layer" as CanvasLayer
 @onready
-var _tile_hotbar: Control = $"../gui/play/tile_hotbar" as Control
+var _tile_hotbar: Control = $"../gui/gui/tile_hotbar" as Control
 
 var _player_tile_drag: Tile = null
 var _player_tiles_hotbar: Array[Tile] = []
@@ -68,21 +68,6 @@ func decode_submission_bytes(bytes: PackedByteArray) -> Dictionary[Vector2i, int
 		submission[Vector2i(tile_position_x, tile_position_y)] = tile_face
 		index += 5
 	return submission
-
-func assign_tiles() -> void:
-	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
-		# loop through all players, fill tiles with random faces (dont bother with proper tile distributions for now)
-		for player_id: int in _game_data.get_player_ids():
-			if _game_data.get_player_spectator(player_id):
-				continue
-			print("Assigning tiles to %d." % [player_id])
-			var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
-			print("Current tiles: " + str(player_tiles))
-			while player_tiles.size() < TILE_HOTBAR_COUNT:
-				var tile_face: int = Tile.get_random_face()
-				player_tiles.append(tile_face)
-			print("After tiles: " + str(player_tiles))
-			_game_data.set_player_tiles(player_id, player_tiles)
 
 func recall_tiles() -> void:
 	var tiles: Array[Tile] = _player_tiles_board.values()
@@ -263,6 +248,7 @@ func _refresh_tiles() -> void:
 			if tile_check.has(tile.face):
 				tile_check.erase(tile.face)
 			else:
+				_player_tiles_board[tile_position].queue_free()
 				_player_tiles_board.erase(tile_position)
 		
 		if is_instance_valid(_player_tile_drag) && !tile_check.has(_player_tile_drag.face):

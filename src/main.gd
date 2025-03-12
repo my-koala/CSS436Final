@@ -1,10 +1,13 @@
 @tool
 extends Node
 
+# TODO (low priority);
+# fix dragging tiles off screen places on board (make place back onto hotbor)
+# add zooming
+# add jingle particles when submitted successful
+#
+
 # TODO: (monday)
-# move Submit and Recall button to game_tiles @onready
-# add display message on submit (with errors or success)
-# disable submit button when already submitted
 # implement points + leaderboard display (in game and lobby)
 # infinite board - generative/with tile placements, or from the start?
 # - could use parallax layer to repeat drawing

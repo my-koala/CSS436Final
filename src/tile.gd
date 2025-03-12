@@ -85,6 +85,9 @@ func _process(delta: float) -> void:
 	_label_points.text = str(get_face_points())
 
 func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	
 	if !locked:
 		_pickable.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_pickable.mouse_filter = Control.MOUSE_FILTER_STOP
