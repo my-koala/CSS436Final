@@ -222,6 +222,7 @@ func stop_loop() -> void:
 	_game_data.clear_all_player_tiles()
 	
 	loop_stopped.emit()
+	_game_data.end_game()
 
 func _fill_player_tiles(player_id: int) -> void:
 	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():

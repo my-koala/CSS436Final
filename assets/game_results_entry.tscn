@@ -1,13 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://cstqcudoy2wth"]
+[gd_scene load_steps=3 format=3 uid="uid://4m1x2mfhttcy"]
 
-[ext_resource type="Script" uid="uid://ckx7mw4pwh2i5" path="res://src/game_leaderboard_entry.gd" id="1_330xg"]
-[ext_resource type="Texture2D" uid="uid://crexyi6rn4w80" path="res://assets/trophy.png" id="1_uub6x"]
+[ext_resource type="Script" uid="uid://8ww72uhf3y3k" path="res://src/game_results_entry.gd" id="1_6h35p"]
+[ext_resource type="Texture2D" uid="uid://crexyi6rn4w80" path="res://assets/trophy.png" id="2_l3y4x"]
 
-[node name="game_leaderboard_entry" type="Button"]
+[node name="game_results_entry" type="Button"]
 clip_children = 2
 clip_contents = true
 custom_minimum_size = Vector2(256, 64)
-script = ExtResource("1_330xg")
+script = ExtResource("1_6h35p")
 
 [node name="color_rect" type="ColorRect" parent="."]
 layout_mode = 1
@@ -39,7 +39,7 @@ offset_top = -16.0
 offset_right = 32.0
 offset_bottom = 16.0
 grow_vertical = 2
-texture = ExtResource("1_uub6x")
+texture = ExtResource("2_l3y4x")
 expand_mode = 4
 
 [node name="label_name" type="RichTextLabel" parent="content"]

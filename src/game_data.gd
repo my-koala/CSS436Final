@@ -33,6 +33,16 @@ class Player:
 	var place: int = -1
 
 signal updated()
+signal game_ended()
+
+func end_game() -> void:
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		_rpc_end_game.rpc()
+		game_ended.emit()
+
+@rpc("authority", "call_remote", "reliable", 0)
+func _rpc_end_game() -> void:
+	game_ended.emit()
 
 static func is_valid_player_name(player_name: String) -> bool:
 	if player_name.is_empty():
