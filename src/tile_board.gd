@@ -23,6 +23,7 @@ enum BoardMultiplier {
 	LETTER_2X,
 	LETTER_3X,
 	LETTER_4X,
+	WORD_1X,
 	WORD_2X,
 	WORD_3X,
 	WORD_4X,
@@ -174,7 +175,7 @@ func _ready() -> void:
 				3:
 					_board_multipliers[x][y] = BoardMultiplier.LETTER_4X
 				4:
-					_board_multipliers[x][y] = BoardMultiplier.LETTER_1X
+					_board_multipliers[x][y] = BoardMultiplier.WORD_1X
 				5:
 					_board_multipliers[x][y] = BoardMultiplier.WORD_2X
 				6:
@@ -184,12 +185,37 @@ func _ready() -> void:
 				_:
 					_board_multipliers[x][y] = BoardMultiplier.LETTER_1X
 
-func get_board_multiplier(tile_position: Vector2i) -> BoardMultiplier:
+func get_board_letter_multiplier(tile_position: Vector2i) -> int:
 	var wrapped: Vector2i = Vector2i(
 		posmod(tile_position.x, _board_multipliers.size()),
 		posmod(tile_position.y, _board_multipliers[0].size())
 	)
-	return _board_multipliers[wrapped.x][wrapped.y]
+	match _board_multipliers[wrapped.x][wrapped.y]:
+		BoardMultiplier.LETTER_1X:
+			return 1
+		BoardMultiplier.LETTER_2X:
+			return 2
+		BoardMultiplier.LETTER_3X:
+			return 3
+		BoardMultiplier.LETTER_4X:
+			return 4
+	return 1
+
+func get_board_word_multiplier(tile_position: Vector2i) -> int:
+	var wrapped: Vector2i = Vector2i(
+		posmod(tile_position.x, _board_multipliers.size()),
+		posmod(tile_position.y, _board_multipliers[0].size())
+	)
+	match _board_multipliers[wrapped.x][wrapped.y]:
+		BoardMultiplier.WORD_1X:
+			return 1
+		BoardMultiplier.WORD_2X:
+			return 2
+		BoardMultiplier.WORD_3X:
+			return 3
+		BoardMultiplier.WORD_4X:
+			return 4
+	return 1
 
 func _on_multiplayer_server_disconnected() -> void:
 	_clear_tiles()

@@ -36,23 +36,21 @@ var _label_face: Label = $display/label_face as Label
 @onready
 var _label_points: Label = $display/label_points as Label
 
-func get_face_points() -> int:
-	match face:
+static func get_face_points(tile_face: int) -> int:
+	match tile_face:
 		0, 4, 8, 14, 20, 18, 19, 21: # A, E, I, O, U, L, N, S, T, R
-			return 2
+			return 1
 		3, 6: # D, G
-			return 3
+			return 2
 		1, 2, 11, 12, 13, 15: # B, C, L, M, N, P
-			return 4
+			return 3
 		5, 7, 17, 22, 24: # F, H, V, W, Y
 			return 5
-		10: # K
-			return 6
-		9, 23: # J, X
-			return 9
+		9, 10, 23: # J, K, X
+			return 7
 		16, 25: # Q, Z
-			return 11
-	return 0 # Default case
+			return 10
+	return -1
 
 static func get_face_string(tile_face: int) -> String:
 	return String.chr(tile_face + FACE_UNICODE_OFFSET)
@@ -82,7 +80,7 @@ func _process(delta: float) -> void:
 	else:
 		modulate = locked_modulate
 	_label_face.text = get_face_string(face)
-	_label_points.text = str(get_face_points())
+	_label_points.text = str(get_face_points(face))
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():

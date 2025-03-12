@@ -344,9 +344,6 @@ func _clear_all_player_points() -> bool:
 func get_local_player_points() -> int:
 	return _local_player.points
 
-func set_local_player_points(player_points: int) -> void:
-	set_player_points(_local_player.id, player_points)
-
 func get_player_points(player_id: int) -> int:
 	var player: Player = _get_player(player_id)
 	if is_instance_valid(player):

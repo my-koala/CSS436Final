@@ -1,9 +1,13 @@
 @tool
 extends Node
 
-# TODO (low priority);
+# TODO (high priority):
+# add leaderboard
 # fix dragging tiles off screen places on board (make place back onto hotbor)
 # add zooming
+# add better random tile distribution
+
+# TODO (low priority);
 # add jingle particles when submitted successful
 # add multiplier text to board texture
 

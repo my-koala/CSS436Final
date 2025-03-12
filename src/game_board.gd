@@ -138,7 +138,8 @@ func next_turn() -> void:
 	_rpc_set_turn_count.rpc(_turn_count, _turn_count_max)
 	_rpc_set_turn_time.rpc(_turn_time, _turn_time_max)
 	
-	_assign_player_tiles()
+	for player_id: int in _game_data.get_player_ids():
+		_fill_player_tiles(player_id)
 
 var _await_submit_results: bool = false
 
@@ -170,7 +171,7 @@ func _on_button_recall_pressed() -> void:
 	_game_tiles.recall_tiles()
 
 func _on_button_swap_pressed() -> void:
-	pass
+	_rpc_request_swap.rpc_id(get_multiplayer_authority())
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -212,16 +213,14 @@ func stop_loop() -> void:
 	
 	loop_stopped.emit()
 
-func _assign_player_tiles() -> void:
+func _fill_player_tiles(player_id: int) -> void:
 	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
-		# loop through all players, fill tiles with random faces (dont bother with proper tile distributions for now)
-		for player_id: int in _game_data.get_player_ids():
-			if _game_data.get_player_spectator(player_id):
-				continue
-			var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
-			while player_tiles.size() < DEFAULT_TILE_COUNT:
-				player_tiles.append(Tile.get_random_face())
-			_game_data.set_player_tiles(player_id, player_tiles)
+		if _game_data.get_player_spectator(player_id):
+			return
+		var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
+		while player_tiles.size() < DEFAULT_TILE_COUNT:
+			player_tiles.append(Tile.get_random_face())
+		_game_data.set_player_tiles(player_id, player_tiles)
 
 var _player_submission_ids: Array[int] = []
 var _player_submission_processes: Array[Callable] = []
@@ -233,19 +232,31 @@ var _player_submission_processing: bool = false
 # tile_face: 1 byte (8 bit unsigned int)
 @rpc("any_peer", "call_remote", "reliable", 0)
 func _rpc_request_submit(bytes: PackedByteArray) -> void:
-	var player_id: int = multiplayer.get_remote_sender_id()
-	
-	var player_submission: Dictionary[Vector2i, int] = _game_tiles.decode_submission_bytes(bytes)
-	if player_submission.is_empty():
-		_rpc_submit_result.rpc_id(player_id, SubmissionResult.INVALID_SUBMISSION)
-		return
-	
-	if _player_submission_ids.has(player_id):
-		_rpc_submit_result.rpc_id(player_id, SubmissionResult.STILL_PROCESSING)
-		return
-	
-	_player_submission_ids.append(player_id)
-	_player_submission_processes.append(_validate_submission.bind(player_id, player_submission))
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		var player_id: int = multiplayer.get_remote_sender_id()
+		
+		var player_submission: Dictionary[Vector2i, int] = _game_tiles.decode_submission_bytes(bytes)
+		if player_submission.is_empty():
+			_rpc_submit_result.rpc_id(player_id, SubmissionResult.INVALID_SUBMISSION)
+			return
+		
+		if _player_submission_ids.has(player_id):
+			_rpc_submit_result.rpc_id(player_id, SubmissionResult.STILL_PROCESSING)
+			return
+		
+		_player_submission_ids.append(player_id)
+		_player_submission_processes.append(_validate_submission.bind(player_id, player_submission))
+
+@rpc("any_peer", "call_remote", "reliable", 0)
+func _rpc_request_swap() -> void:
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		var player_id: int = multiplayer.get_remote_sender_id()
+		if !_game_data.get_player_submitted(player_id):
+			_game_data.set_player_submitted(player_id, true)
+			var player_tiles: Array[int] = []
+			while player_tiles.size() < DEFAULT_TILE_COUNT:
+				player_tiles.append(Tile.get_random_face())
+			_game_data.set_player_tiles(player_id, player_tiles)
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -270,7 +281,7 @@ func _physics_process(delta: float) -> void:
 			if _player_submission_processing:
 				break
 			_player_submission_processing = true
-			var submission_result: SubmissionResult = await _player_submission_processes[0].call()
+			await _player_submission_processes[0].call()
 			_player_submission_ids.pop_front()
 			_player_submission_processes.pop_front()
 			_player_submission_processing = false
@@ -287,14 +298,14 @@ func _physics_process(delta: float) -> void:
 				stop_loop()
 
 @rpc("authority", "call_remote", "reliable", 0)
-func _rpc_submit_result(submission_result: SubmissionResult) -> void:
+func _rpc_submit_result(submission_result: SubmissionResult, points: int = 0) -> void:
 	var submission_result_message: String = get_submission_result_message(submission_result)
 	_gui_alert_label.text = ""
 	_gui_alert_label.clear()
 	if submission_result == SubmissionResult.OK:
 		_gui_alert_label.append_text("[color=white]%s[/color]" % [submission_result_message])
 		_gui_alert_label.append_text(" ")
-		_gui_alert_label.append_text("[color=green]+%d points![/color]" % [0])
+		_gui_alert_label.append_text("[color=green]+%d points![/color]" % [points])
 	else:
 		_gui_alert_label.append_text("[color=red]%s[/color]" % [submission_result_message])
 	
@@ -417,49 +428,72 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 			_rpc_submit_result.rpc_id(player_id, SubmissionResult.TILES_NOT_CONNECTED)
 			return SubmissionResult.TILES_NOT_CONNECTED
 	
-	# Make code that generates all words that are created with this submission.
+	var points: int = 0
+	
+	# Get all words created by submission and calculate points.
 	# Words are 2 or more consecutive tiles in left->right and top->bottom directions.
 	var words: Array[String] = []
 	# Get major axis word.
-	var word_builder: String = ""
+	var tile_major_axis_word: String = ""
 	var tile_major_axis_position: Vector2i = tile_major_axis_min
+	var tile_major_axis_points: int = 0
+	var tile_major_axis_points_multiplier: int = 1
 	while tile_major_axis_position <= tile_major_axis_max:
+		var tile_face: int = -1
 		if _tile_board.has_tile_at(tile_major_axis_position):
-			word_builder += Tile.get_face_string(_tile_board.get_tile_at(tile_major_axis_position))
+			tile_face = _tile_board.get_tile_at(tile_major_axis_position)
 		elif submission.has(tile_major_axis_position):
-			word_builder += Tile.get_face_string(submission[tile_major_axis_position])
+			tile_face = submission[tile_major_axis_position]
+		
+		tile_major_axis_word += Tile.get_face_string(tile_face)
+		tile_major_axis_points += Tile.get_face_points(tile_face) * _tile_board.get_board_letter_multiplier(tile_major_axis_position)
+		tile_major_axis_points_multiplier *= _tile_board.get_board_word_multiplier(tile_major_axis_position)
 		tile_major_axis_position += tile_major_axis
-	if word_builder.length() > 1:
-		words.append(word_builder)
+	
+	if tile_major_axis_word.length() > 1:
+		words.append(tile_major_axis_word)
+		points += tile_major_axis_points * tile_major_axis_points_multiplier
 	
 	# Get minor axis words (only from submission tiles!)
 	for tile_position: Vector2i in tile_positions:
-		word_builder = Tile.get_face_string(submission[tile_position])
+		var tile_face: int = submission[tile_position]
+		var tile_minor_axis_word: String = Tile.get_face_string(tile_face)
+		var tile_minor_axis_points: int = Tile.get_face_points(tile_face) * _tile_board.get_board_letter_multiplier(tile_position)
+		var tile_minor_axis_points_multiplier: int = 1 * _tile_board.get_board_word_multiplier(tile_position)
 		
 		# Navigate to minor axis min.
 		var tile_minor_axis_min: Vector2i = tile_position
 		while true:
 			tile_minor_axis_min -= tile_minor_axis
 			if _tile_board.has_tile_at(tile_minor_axis_min):
-				word_builder = Tile.get_face_string(_tile_board.get_tile_at(tile_minor_axis_min)) + word_builder
+				tile_face = _tile_board.get_tile_at(tile_minor_axis_min)
 			elif submission.has(tile_minor_axis_min):
-				word_builder = Tile.get_face_string(submission[tile_minor_axis_min]) + word_builder
+				tile_face = submission[tile_minor_axis_min]
 			else:
 				break
+			
+			tile_minor_axis_word = Tile.get_face_string(tile_face) + tile_minor_axis_word
+			tile_minor_axis_points += Tile.get_face_points(tile_face) * _tile_board.get_board_letter_multiplier(tile_minor_axis_min)
+			tile_minor_axis_points_multiplier *= _tile_board.get_board_word_multiplier(tile_minor_axis_min)
 		
 		# Navigate to minor axis max.
 		var tile_minor_axis_max: Vector2i = tile_position
 		while true:
 			tile_minor_axis_max += tile_minor_axis
 			if _tile_board.has_tile_at(tile_minor_axis_max):
-				word_builder += Tile.get_face_string(_tile_board.get_tile_at(tile_minor_axis_max))
+				tile_face = _tile_board.get_tile_at(tile_minor_axis_max)
 			elif submission.has(tile_minor_axis_max):
-				word_builder += Tile.get_face_string(submission[tile_minor_axis_max])
+				tile_face = submission[tile_minor_axis_max]
 			else:
 				break
+			
+			tile_minor_axis_word = Tile.get_face_string(tile_face) + tile_minor_axis_word
+			tile_minor_axis_points += Tile.get_face_points(tile_face) * _tile_board.get_board_letter_multiplier(tile_minor_axis_max)
+			tile_minor_axis_points_multiplier *= _tile_board.get_board_word_multiplier(tile_minor_axis_max)
 		
-		if word_builder.length() > 1:
-			words.append(word_builder)
+		if tile_minor_axis_word.length() > 1:
+			words.append(tile_minor_axis_word)
+			points += tile_minor_axis_points * tile_minor_axis_points_multiplier
 	
 	# Check words with WordCheck.
 	for word: String in words:
@@ -467,7 +501,8 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 			_rpc_submit_result.rpc_id(player_id, SubmissionResult.INVALID_WORD)
 			return SubmissionResult.INVALID_WORD
 	
-	if !multiplayer.has_multiplayer_peer() || !is_multiplayer_authority():
+	# Time out in case disconnection has happened since word check.
+	if !multiplayer.has_multiplayer_peer() || !multiplayer.get_peers().has(player_id):
 		return SubmissionResult.TIMED_OUT
 	
 	# Submission passed all checks!
@@ -475,8 +510,12 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 	for coordinates: Vector2i in submission:
 		var face: int = submission[coordinates]
 		_tile_board.add_tile(coordinates, face)
+	
 	_game_data.set_player_tiles(player_id, player_tiles)
+	_game_data.set_player_points(player_id, points)
 	_game_data.set_player_submitted(player_id, true)
 	
-	_rpc_submit_result.rpc_id(player_id, SubmissionResult.OK)
+	_fill_player_tiles(player_id)
+	
+	_rpc_submit_result.rpc_id(player_id, SubmissionResult.OK, points)
 	return SubmissionResult.OK
