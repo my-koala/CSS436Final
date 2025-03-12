@@ -9,7 +9,28 @@ const URL: String = "https://api.dictionaryapi.dev/api/v2/entries/en/"
 
 signal _word_processed(word: String)
 
-var _word_valid_cache: Dictionary[String, bool] = {}
+var _word_valid_cache: Dictionary[String, bool] = {
+	"be": true,
+	"of": true,
+	"or": true,
+	"is": true,
+	"look": true,
+	"hell": true,
+	"every": true,
+	"your": true,
+	"for": true,
+	"was": true,
+	"our": true,
+	"net": true,
+	"phase": true,
+	"their": true,
+	"tight": true,
+	"tightest": true,
+	"touch": true,
+	"touches": true,
+	"lives": true,
+	"looked": true,
+}
 
 var _word_queue: Array[String] = []
 
@@ -46,6 +67,7 @@ func _physics_process(delta: float) -> void:
 # i need a new queue solution
 # Coroutine
 func get_word_valid(word: String) -> bool:
+	word = word.to_lower()
 	if _word_valid_cache.has(word):
 		return _word_valid_cache[word]
 	_word_queue.append(word)
