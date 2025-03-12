@@ -95,13 +95,17 @@ func stop() -> void:
 		Mode.CLIENT:
 			# TODO: Reset board, tiles, players, etc.
 			# though much of reset would be through rpcs and multiplayer callbacks?
-			_network.quit_server()
+			if _network.is_active():
+				_network.quit_server()
 			_mode = Mode.NONE
 			_set_state(State.NONE)
+			client_stopped.emit()
 		Mode.SERVER:
-			_network.stop_server()
+			if _network.is_active():
+				_network.stop_server()
 			_mode = Mode.NONE
 			_set_state(State.NONE)
+			server_stopped.emit()
 
 @rpc("authority", "call_remote", "reliable", 1)
 func _rpc_set_state(state: State) -> void:
@@ -133,26 +137,28 @@ func _set_state(state: State) -> void:
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
-		pass
+		return
 	
 	match _mode:
 		Mode.NONE:
 			pass
 		Mode.CLIENT:
+			if !multiplayer.has_multiplayer_peer():
+				stop()
 			match _state_curr:
 				State.LOBBY:
 					pass
 				State.PLAY:
 					pass
 		Mode.SERVER:
+			if !multiplayer.has_multiplayer_peer():
+				stop()
 			match _state_curr:
 				State.LOBBY:
-					# TODO: check if all players are ready, start play
 					if _game_data.get_all_players_ready():
 						_game_data.set_all_players_ready(false)
 						_set_state(State.PLAY)
 						_game_board.start_loop()
 				State.PLAY:
 					if !_game_board.is_loop():
-						print("game.gd: game ended!")
 						_set_state(State.LOBBY)

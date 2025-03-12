@@ -419,7 +419,6 @@ follow_viewport_enabled = true
 layer = 32
 
 [node name="menu_config" type="Control" parent="gui"]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -23,6 +23,10 @@ var _multiplayer_api: SceneMultiplayer = SceneMultiplayer.new()
 
 func _ready() -> void:
 	_multiplayer_api.multiplayer_peer = null
+	_multiplayer_api.server_disconnected.connect(_on_multiplayer_api_server_disconnected)
+
+func _on_multiplayer_api_server_disconnected() -> void:
+	_multiplayer_api.multiplayer_peer = null
 
 func _enter_tree() -> void:
 	if Engine.is_editor_hint():
