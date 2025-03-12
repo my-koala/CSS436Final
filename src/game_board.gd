@@ -174,6 +174,7 @@ func _physics_process(delta: float) -> void:
 		_player_submission_processes.pop_front()
 		_player_submission_processing = false
 	
+	#if _game_data.
 	if _turn_time > 0.0:
 		_turn_time = maxf(_turn_time - delta, 0.0)
 	elif _loop:
