@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=22 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" uid="uid://0yjj5ris7xvr" path="res://src/game_lobby_list.gd" id="7_wpieh"]
 [ext_resource type="Script" uid="uid://df4jdhw4qtqix" path="res://src/game_lobby_ready.gd" id="8_ul5qt"]
 [ext_resource type="Script" uid="uid://ct314rl61mc55" path="res://src/game_results.gd" id="10_2rvxm"]
+[ext_resource type="PackedScene" uid="uid://cfmdrd7ailidu" path="res://assets/confetti.tscn" id="11_6eca0"]
 [ext_resource type="Script" uid="uid://dev6hqla35dfo" path="res://src/menu_config.gd" id="11_vvw4a"]
 [ext_resource type="Texture2D" uid="uid://b3v7wg38eg8e3" path="res://assets/board.png" id="12_h4xlo"]
 [ext_resource type="Script" uid="uid://dv4dir2oybjfm" path="res://src/game_leaderboard.gd" id="13_ew6cl"]
@@ -184,6 +185,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 script = ExtResource("10_2rvxm")
+
+[node name="confetti" parent="game/game_lobby/game_lobby/panel_left/v_box_container/scroll_container/game_results" instance=ExtResource("11_6eca0")]
+top_level = true
+z_index = 128
+position = Vector2(612, 489)
 
 [node name="game_board" type="CanvasLayer" parent="game"]
 layer = 0

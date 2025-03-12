@@ -7,6 +7,8 @@ const ENTRY_SCENE: PackedScene = preload("uid://4m1x2mfhttcy")
 @onready
 var _game_data: GameData = %game_data as GameData
 var _game_data_dirty: bool = false
+@onready
+var _confetti: CPUParticles2D = $confetti as CPUParticles2D
 
 var _entries: Dictionary[int, GameResultsEntry] = {}
 
@@ -14,7 +16,6 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	
-	visible = false
 	_game_data.game_ended.connect(_on_game_data_game_ended)
 
 func _on_game_data_game_ended() -> void:
@@ -26,7 +27,7 @@ func _physics_process(delta: float) -> void:
 	
 	if _game_data_dirty:
 		_game_data_dirty = false
-		visible = true
+		_confetti.emitting = true
 		_refresh_entries()
 
 func _refresh_entries() -> void:
