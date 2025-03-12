@@ -1,14 +1,13 @@
 [gd_scene load_steps=3 format=3 uid="uid://y315laex5i65"]
 
 [ext_resource type="Script" uid="uid://c07pd7f38akbj" path="res://src/tile.gd" id="1_42nim"]
-[ext_resource type="Texture2D" uid="uid://bdcrfsah85g5b" path="res://assets/tile.png" id="2_hcduw"]
+[ext_resource type="Texture2D" uid="uid://dqlb8jsbivp2r" path="res://assets/temporary_tile.png" id="2_42nim"]
 
 [node name="tile" type="Node2D"]
 script = ExtResource("1_42nim")
-locked_modulate = Color(0.751001, 0.758422, 0.858077, 1)
 
 [node name="sprite_2d" type="Sprite2D" parent="."]
-texture = ExtResource("2_hcduw")
+texture = ExtResource("2_42nim")
 offset = Vector2(0, -64)
 region_enabled = true
 region_rect = Rect2(0, 0, 128, 256)

@@ -64,7 +64,6 @@ func _ready() -> void:
 	if args.has("name"):
 		player_name = args["name"]
 	if args.has("unsafe"):
-		print("has unsafe arg!")
 		_unsafe = true
 	if args.has("auto-connect"):
 		auto_connect = args["auto-connect"].to_lower() == "true"

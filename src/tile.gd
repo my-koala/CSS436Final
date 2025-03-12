@@ -8,6 +8,9 @@ const FACE_MIN: int = 0
 const FACE_MAX: int = 25
 const FACE_UNICODE_OFFSET: int = 65
 
+const TEXTURE_A: Texture2D = preload("res://assets/tile.png")
+const TEXTURE_B: Texture2D = preload("res://assets/temporary_tile.png")
+
 @export_range(FACE_MIN, FACE_MAX, 1)
 var face: int = 0:
 	get:
@@ -23,9 +26,6 @@ var locked: bool = false:
 		return locked
 	set(value):
 		locked = value
-
-@export
-var locked_modulate: Color = Color(0.7, 0.7, 0.85, 1.0)
 
 @onready
 var _sprite: Sprite2D = $sprite_2d as Sprite2D
@@ -83,10 +83,12 @@ func is_mouse_hovered() -> bool:
 	return _input_mouse_hovering
 
 func _process(delta: float) -> void:
-	if !locked:
-		modulate = Color.WHITE
+	if locked:
+		if _sprite.texture != TEXTURE_A:
+			_sprite.texture = TEXTURE_A
 	else:
-		modulate = locked_modulate
+		if _sprite.texture != TEXTURE_B:
+			_sprite.texture = TEXTURE_B
 	_label_face.text = get_face_string(face)
 	_label_points.text = str(get_face_points(face))
 
