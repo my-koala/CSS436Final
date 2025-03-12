@@ -147,7 +147,6 @@ metadata/_edit_lock_ = true
 
 [node name="gui" type="CanvasLayer" parent="game/game_board/game_board"]
 layer = 4
-visible = false
 
 [node name="gui" type="Control" parent="game/game_board/game_board/gui"]
 layout_mode = 3

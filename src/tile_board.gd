@@ -38,10 +38,10 @@ var _tile_map_layer: TileMapLayer = $parallax_2d/tile_map_layer as TileMapLayer
 var _tiles: Dictionary[Vector2i, Tile] = {}
 
 func global_to_map(global_pos: Vector2) -> Vector2i:
-	return _tile_map_layer.local_to_map(_tile_map_layer.to_local(global_pos))
+	return _tile_map_layer.local_to_map(to_local(global_pos - _tile_map_layer.position))
 
 func map_to_global(coordinates: Vector2i) -> Vector2:
-	return global_transform * (Vector2(coordinates * _tile_map_layer.tile_set.tile_size) - position)
+	return global_transform * (Vector2(coordinates * _tile_map_layer.tile_set.tile_size))
 
 #region Tiles
 

@@ -5,7 +5,7 @@ extends Node
 # fix dragging tiles off screen places on board (make place back onto hotbor)
 # add zooming
 # add jingle particles when submitted successful
-#
+# add multiplier text to board texture
 
 # TODO: (monday)
 # implement points + leaderboard display (in game and lobby)
