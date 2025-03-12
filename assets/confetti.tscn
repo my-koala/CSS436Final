@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3 uid="uid://cfmdrd7ailidu"]
+
+[ext_resource type="Gradient" uid="uid://yxklg1i8b6nw" path="res://confetti_gradient.tres" id="1_b3uab"]
+
+[sub_resource type="Curve" id="Curve_g212e"]
+_data = [Vector2(0.0153374, 0.013464), 0.0, 0.0, 0, 0, Vector2(0.907975, 0.260098), 0.0, 0.0, 0, 0, Vector2(1, 0.252142), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[node name="confetti" type="Node2D"]
+
+[node name="cpu_particles_2d" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 32
+lifetime = 1.14
+one_shot = true
+explosiveness = 0.6
+randomness = 0.2
+local_coords = true
+direction = Vector2(0, -1)
+gravity = Vector2(0, 100)
+initial_velocity_min = 189.65
+initial_velocity_max = 321.84
+angular_velocity_min = 281.38
+angular_velocity_max = 281.38
+linear_accel_min = 11.49
+linear_accel_max = 11.49
+scale_amount_max = 35.48
+scale_amount_curve = SubResource("Curve_g212e")
+color_initial_ramp = ExtResource("1_b3uab")
