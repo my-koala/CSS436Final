@@ -3,22 +3,15 @@ extends Node
 
 # TODO (high priority):
 # add leaderboard
+# add title screen
 # fix dragging tiles off screen places on board (make place back onto hotbor)
 # add zooming
 # add better random tile distribution
 
 # TODO (low priority);
 # add jingle particles when submitted successful
+# add confetti particles when game ends
 # add multiplier text to board texture
-
-# TODO: (monday)
-# implement points + leaderboard display (in game and lobby)
-# infinite board - generative/with tile placements, or from the start?
-# - could use parallax layer to repeat drawing
-# - decorators (such as tile multipliers) will also repeat, EXCEPT for the center star! probably its own sprite
-# board multipliers
-# word check algorithm (prahas)
-# http request for word verification
 
 const DEFAULT_SERVER_PORT: int = 43517
 const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"
