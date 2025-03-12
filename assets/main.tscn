@@ -392,6 +392,7 @@ offset_top = -384.0
 offset_bottom = -256.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0.192157, 0.172549, 0.196078, 0.827451)
 
 [node name="rich_text_label" type="RichTextLabel" parent="game/game_board/game_board/gui/gui/alert"]
@@ -401,6 +402,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_font_sizes/bold_italics_font_size = 48
 theme_override_font_sizes/italics_font_size = 48
 theme_override_font_sizes/mono_font_size = 48
