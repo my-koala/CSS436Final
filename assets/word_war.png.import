@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgp2rrk71wsts"
-path="res://.godot/imported/Word War.png-12bf95f1bcd26daf0bab6084e64d0063.ctex"
+path="res://.godot/imported/word_war.png-dd8dc36b0d1b579c2e1a85a614ce282c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Word War.png"
-dest_files=["res://.godot/imported/Word War.png-12bf95f1bcd26daf0bab6084e64d0063.ctex"]
+source_file="res://assets/word_war.png"
+dest_files=["res://.godot/imported/word_war.png-dd8dc36b0d1b579c2e1a85a614ce282c.ctex"]
 
 [params]
 
