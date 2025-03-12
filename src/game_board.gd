@@ -85,6 +85,8 @@ var _game_tiles: GameTiles = $game_tiles as GameTiles
 @onready
 var _tile_board: TileBoard = $tile_board as TileBoard
 @onready
+var _game_camera: GameCamera = $game_camera as GameCamera
+@onready
 var _gui_label_turn: RichTextLabel = $gui/gui/panel_top/label_turn as RichTextLabel
 @onready
 var _gui_alert: Control = $gui/gui/alert as Control
@@ -122,6 +124,7 @@ func start_loop(turn_count: int = DEFAULT_TURN_COUNT, turn_time: float = DEFAULT
 	_turn_time = 0.0
 	_turn_time_max = turn_time
 	
+	_tile_board.clear_tiles()
 	_game_data.clear_all_player_points()
 	
 	next_turn()
@@ -156,7 +159,14 @@ func _ready() -> void:
 	_button_swap.pressed.connect(_on_button_swap_pressed)
 	_button_swap.disabled = true
 	
+	multiplayer.peer_connected.connect(_on_multiplayer_peer_connected)
+	
 	_gui_alert.modulate.a = 0.0
+
+func _on_multiplayer_peer_connected(player_id: int) -> void:
+	if is_multiplayer_authority():
+		_rpc_set_turn_count.rpc_id(player_id, _turn_count, _turn_count_max)
+		_rpc_set_turn_time.rpc_id(player_id, _turn_time, _turn_time_max)
 
 func _on_button_submit_pressed() -> void:
 	if _await_submit_results:
@@ -260,6 +270,10 @@ func _rpc_request_swap() -> void:
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
+		return
+	
+	if !active:
+		_game_camera.global_position = Vector2.ZERO
 		return
 	
 	if _await_submit_results || _game_data.get_local_player_submitted():

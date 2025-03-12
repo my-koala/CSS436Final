@@ -48,25 +48,16 @@ var _game_lobby: GameLobby = $game_lobby/game_lobby as GameLobby
 @onready
 var _game_board: GameBoard = $game_board/game_board as GameBoard
 
-@rpc("authority", "call_remote", "reliable", 0)
-func _rpc_set_game_state(state: int) -> void:
-	pass
-
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	
 	multiplayer.peer_connected.connect(_on_multiplayer_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_multiplayer_peer_disconnected)
 	multiplayer.server_disconnected.connect(_on_multiplayer_server_disconnected)
 
 func _on_multiplayer_peer_connected(player_id: int) -> void:
-	print("%d: peer connected: %d" % [multiplayer.get_unique_id(), player_id])
 	if is_multiplayer_authority():
 		_rpc_set_state.rpc_id(player_id, _state_curr)
-
-func _on_multiplayer_peer_disconnected(player_id: int) -> void:
-	print("%d: peer disconnected: %d" % [multiplayer.get_unique_id(), player_id])
 
 func _on_multiplayer_server_disconnected() -> void:
 	_set_state(State.NONE)
@@ -82,7 +73,6 @@ func start_client(address: String, port: int, player_name: String = "Player", un
 	_game_data.set_local_player_spectator(false)
 	
 	_mode = Mode.CLIENT
-	_set_state(State.LOBBY)
 	client_started.emit()
 	return true
 
@@ -128,14 +118,17 @@ func _set_state(state: State) -> void:
 		State.NONE:
 			_game_lobby.active = false
 			_game_lobby.visible = false
+			_game_board.active = false
 			_game_board.visible = false
 		State.LOBBY:
 			_game_lobby.active = true
 			_game_lobby.visible = true
+			_game_board.active = false
 			_game_board.visible = false
 		State.PLAY:
 			_game_lobby.active = false
 			_game_lobby.visible = false
+			_game_board.active = true
 			_game_board.visible = true
 
 func _physics_process(delta: float) -> void:
