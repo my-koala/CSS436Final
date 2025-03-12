@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://di17ysaiamnvl"]
+
+[ext_resource type="Script" uid="uid://c88fv2dfhjjbs" path="res://src/game_lobby_list_entry.gd" id="1_lvnqb"]
+
+[node name="game_lobby_list_entry" type="Button"]
+clip_children = 2
+clip_contents = true
+custom_minimum_size = Vector2(384, 64)
+script = ExtResource("1_lvnqb")
+
+[node name="color_rect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.402519, 0.61306, 0.365522, 0.769)
+
+[node name="content" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="label_name" type="RichTextLabel" parent="content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+bbcode_enabled = true
+text = "[color=white]Player[/color]"
+scroll_active = false
+autowrap_mode = 0
+vertical_alignment = 1
+
+[node name="label_status" type="RichTextLabel" parent="content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+bbcode_enabled = true
+text = "[color=green]Ready[/color]"
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 2
+vertical_alignment = 1

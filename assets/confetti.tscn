@@ -1,29 +1,33 @@
-[gd_scene load_steps=3 format=3 uid="uid://cfmdrd7ailidu"]
+[gd_scene load_steps=4 format=3 uid="uid://cfmdrd7ailidu"]
 
-[ext_resource type="Gradient" uid="uid://yxklg1i8b6nw" path="res://confetti_gradient.tres" id="1_b3uab"]
+[ext_resource type="Gradient" uid="uid://yxklg1i8b6nw" path="res://assets/confetti_gradient.tres" id="1_b3uab"]
+
+[sub_resource type="Curve" id="Curve_b3uab"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0]
+point_count = 1
 
 [sub_resource type="Curve" id="Curve_g212e"]
-_data = [Vector2(0.0153374, 0.013464), 0.0, 0.0, 0, 0, Vector2(0.907975, 0.260098), 0.0, 0.0, 0, 0, Vector2(1, 0.252142), 0.0, 0.0, 0, 0]
-point_count = 3
+_data = [Vector2(0, 0.364041), 0.0, 0.0, 0, 0]
+point_count = 1
 
-[node name="confetti" type="Node2D"]
-
-[node name="cpu_particles_2d" type="CPUParticles2D" parent="."]
+[node name="confetti" type="CPUParticles2D"]
+position = Vector2(961, 699)
 emitting = false
-amount = 32
-lifetime = 1.14
+amount = 128
+lifetime = 5.0
 one_shot = true
-explosiveness = 0.6
-randomness = 0.2
+explosiveness = 0.99
 local_coords = true
 direction = Vector2(0, -1)
-gravity = Vector2(0, 100)
-initial_velocity_min = 189.65
-initial_velocity_max = 321.84
-angular_velocity_min = 281.38
-angular_velocity_max = 281.38
-linear_accel_min = 11.49
-linear_accel_max = 11.49
-scale_amount_max = 35.48
-scale_amount_curve = SubResource("Curve_g212e")
+spread = 75.0
+gravity = Vector2(0, 600)
+initial_velocity_min = 500.0
+initial_velocity_max = 1000.0
+angular_velocity_min = -720.0
+angular_velocity_max = 720.0
+scale_amount_min = 24.0
+scale_amount_max = 40.0
+split_scale = true
+scale_curve_x = SubResource("Curve_b3uab")
+scale_curve_y = SubResource("Curve_g212e")
 color_initial_ramp = ExtResource("1_b3uab")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=4 uid="uid://nw2kb71xa2db"]
+[gd_scene load_steps=22 format=4 uid="uid://nw2kb71xa2db"]
 
 [ext_resource type="Script" uid="uid://lljyxnqqax7l" path="res://src/main.gd" id="1_db5cl"]
 [ext_resource type="TileSet" uid="uid://cyojl6rec7r5t" path="res://assets/board.tres" id="2_06ig3"]
@@ -7,12 +7,19 @@
 [ext_resource type="Script" uid="uid://c7y3iqwrjfr06" path="res://src/game_data.gd" id="3_h4xlo"]
 [ext_resource type="Script" uid="uid://b5vbsaxq5wqfb" path="res://src/game_lobby.gd" id="5_ew6cl"]
 [ext_resource type="Script" uid="uid://b2ot00vang7bj" path="res://src/tile_board.gd" id="5_m5usj"]
+[ext_resource type="Texture2D" uid="uid://bgp2rrk71wsts" path="res://assets/word_war.png" id="6_ew6cl"]
 [ext_resource type="Script" uid="uid://b2x1h1hld85pa" path="res://src/game_board.gd" id="6_km2eh"]
 [ext_resource type="Script" uid="uid://b3eo1vdw04anx" path="res://src/network.gd" id="6_ujfqy"]
+[ext_resource type="Texture2D" uid="uid://bclltyowlltbw" path="res://assets/background_texture.png" id="6_wpieh"]
 [ext_resource type="Script" uid="uid://da0gfhno5f7d2" path="res://src/game_tiles.gd" id="7_h4xlo"]
 [ext_resource type="Script" uid="uid://cqbj0ustssojg" path="res://src/word_check.gd" id="7_vvw4a"]
+[ext_resource type="Script" uid="uid://0yjj5ris7xvr" path="res://src/game_lobby_list.gd" id="7_wpieh"]
+[ext_resource type="Script" uid="uid://df4jdhw4qtqix" path="res://src/game_lobby_ready.gd" id="8_ul5qt"]
+[ext_resource type="Script" uid="uid://ct314rl61mc55" path="res://src/game_results.gd" id="10_2rvxm"]
+[ext_resource type="PackedScene" uid="uid://cfmdrd7ailidu" path="res://assets/confetti.tscn" id="11_6eca0"]
 [ext_resource type="Script" uid="uid://dev6hqla35dfo" path="res://src/menu_config.gd" id="11_vvw4a"]
 [ext_resource type="Texture2D" uid="uid://b3v7wg38eg8e3" path="res://assets/board.png" id="12_h4xlo"]
+[ext_resource type="Script" uid="uid://dv4dir2oybjfm" path="res://src/game_leaderboard.gd" id="13_ew6cl"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_vvw4a"]
 atlas = ExtResource("12_h4xlo")
@@ -29,13 +36,14 @@ script = ExtResource("6_ujfqy")
 metadata/_custom_type_script = "uid://b3eo1vdw04anx"
 
 [node name="game_data" type="Node" parent="game"]
+unique_name_in_owner = true
 script = ExtResource("3_h4xlo")
 
 [node name="game_lobby" type="CanvasLayer" parent="game"]
 layer = 16
 
-[node name="game_lobby" type="Control" parent="game/game_lobby" node_paths=PackedStringArray("game_data")]
-visible = false
+[node name="game_lobby" type="Control" parent="game/game_lobby"]
+clip_contents = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -43,7 +51,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("5_ew6cl")
-game_data = NodePath("../../game_data")
 metadata/_custom_type_script = "uid://b5vbsaxq5wqfb"
 
 [node name="color_rect" type="ColorRect" parent="game/game_lobby/game_lobby"]
@@ -53,9 +60,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.623331, 0.594586, 0.585371, 1)
 
-[node name="panel_players" type="Panel" parent="game/game_lobby/game_lobby"]
+[node name="background" type="TextureRect" parent="game/game_lobby/game_lobby"]
+modulate = Color(0.905497, 0.831864, 0.787226, 0.768627)
+layout_mode = 0
+offset_right = 8192.0
+offset_bottom = 8192.0
+scale = Vector2(0.375, 0.375)
+texture = ExtResource("6_wpieh")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="panel_right" type="Panel" parent="game/game_lobby/game_lobby"]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.625
@@ -64,11 +80,28 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="scroll_container" type="ScrollContainer" parent="game/game_lobby/game_lobby/panel_players"]
+[node name="rich_text_label" type="RichTextLabel" parent="game/game_lobby/game_lobby/panel_right"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 128.0
+offset_bottom = 207.0
+grow_horizontal = 2
+theme_override_font_sizes/bold_italics_font_size = 64
+theme_override_font_sizes/italics_font_size = 64
+theme_override_font_sizes/mono_font_size = 64
+theme_override_font_sizes/normal_font_size = 64
+theme_override_font_sizes/bold_font_size = 64
+text = "LOBBY"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="scroll_container" type="ScrollContainer" parent="game/game_lobby/game_lobby/panel_right"]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.1
-anchor_top = 0.1
+anchor_top = 0.2
 anchor_right = 0.9
 anchor_bottom = 0.9
 grow_horizontal = 2
@@ -76,31 +109,12 @@ grow_vertical = 2
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 4
 
-[node name="player_list" type="Control" parent="game/game_lobby/game_lobby/panel_players/scroll_container"]
+[node name="game_lobby_list" type="VBoxContainer" parent="game/game_lobby/game_lobby/panel_right/scroll_container"]
 layout_mode = 2
-
-[node name="label_name" type="RichTextLabel" parent="game/game_lobby/game_lobby/panel_players/scroll_container/player_list"]
-layout_mode = 2
-offset_right = 560.0
-offset_bottom = 864.0
 size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "<player name>"
+script = ExtResource("7_wpieh")
 
-[node name="label_ready" type="RichTextLabel" parent="game/game_lobby/game_lobby/panel_players/scroll_container/player_list"]
-layout_mode = 2
-offset_right = 560.0
-offset_bottom = 864.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 32
-bbcode_enabled = true
-text = "<player name>"
-horizontal_alignment = 2
-
-[node name="button_ready" type="Button" parent="game/game_lobby/game_lobby"]
+[node name="game_lobby_ready" type="Button" parent="game/game_lobby/game_lobby"]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -112,6 +126,70 @@ offset_bottom = -47.0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 72
 text = "Click to READY"
+script = ExtResource("8_ul5qt")
+
+[node name="title" type="TextureRect" parent="game/game_lobby/game_lobby"]
+layout_mode = 0
+offset_left = -6.0
+offset_top = -139.0
+offset_right = 1914.0
+offset_bottom = 941.0
+scale = Vector2(0.625, 0.625)
+texture = ExtResource("6_ew6cl")
+
+[node name="panel_left" type="Panel" parent="game/game_lobby/game_lobby"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 357.0
+offset_top = -177.0
+offset_right = 869.0
+offset_bottom = 207.0
+grow_vertical = 2
+
+[node name="v_box_container" type="VBoxContainer" parent="game/game_lobby/game_lobby/panel_left"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="rich_text_label" type="RichTextLabel" parent="game/game_lobby/game_lobby/panel_left/v_box_container"]
+layout_mode = 2
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+bbcode_enabled = true
+text = "Results"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="scroll_container" type="ScrollContainer" parent="game/game_lobby/game_lobby/panel_left/v_box_container"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="game_results" type="VBoxContainer" parent="game/game_lobby/game_lobby/panel_left/v_box_container/scroll_container"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+script = ExtResource("10_2rvxm")
+
+[node name="confetti" parent="game/game_lobby/game_lobby/panel_left/v_box_container/scroll_container/game_results" instance=ExtResource("11_6eca0")]
+top_level = true
+z_index = 128
+position = Vector2(612, 489)
 
 [node name="game_board" type="CanvasLayer" parent="game"]
 layer = 0
@@ -190,35 +268,6 @@ text = "Turn #/# | Time Left: ##:##"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="alert" type="ColorRect" parent="game/game_board/game_board/gui/gui"]
-layout_mode = 1
-anchors_preset = 14
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_top = -384.0
-offset_bottom = -256.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.192157, 0.172549, 0.196078, 0.827451)
-
-[node name="rich_text_label" type="RichTextLabel" parent="game/game_board/game_board/gui/gui/alert"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/bold_italics_font_size = 48
-theme_override_font_sizes/italics_font_size = 48
-theme_override_font_sizes/mono_font_size = 48
-theme_override_font_sizes/normal_font_size = 48
-theme_override_font_sizes/bold_font_size = 48
-bbcode_enabled = true
-text = "<Alert>"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="panel_bottom" type="Panel" parent="game/game_board/game_board/gui/gui"]
 layout_mode = 1
 anchors_preset = 14
@@ -273,6 +322,97 @@ offset_bottom = 524.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="panel_left" type="Panel" parent="game/game_board/game_board/gui/gui"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_top = 128.0
+offset_right = 320.0
+offset_bottom = -192.0
+grow_vertical = 2
+
+[node name="v_box_container" type="VBoxContainer" parent="game/game_board/game_board/gui/gui/panel_left"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="rich_text_label" type="RichTextLabel" parent="game/game_board/game_board/gui/gui/panel_left/v_box_container"]
+layout_mode = 2
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+bbcode_enabled = true
+text = "Leaderboard"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="scroll_container" type="ScrollContainer" parent="game/game_board/game_board/gui/gui/panel_left/v_box_container"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="game_leaderboard" type="VBoxContainer" parent="game/game_board/game_board/gui/gui/panel_left/v_box_container/scroll_container"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+script = ExtResource("13_ew6cl")
+
+[node name="panel_right" type="Panel" parent="game/game_board/game_board/gui/gui"]
+visible = false
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = 320.0
+offset_bottom = -192.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="alert" type="ColorRect" parent="game/game_board/game_board/gui/gui"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -384.0
+offset_bottom = -256.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.192157, 0.172549, 0.196078, 0.827451)
+
+[node name="rich_text_label" type="RichTextLabel" parent="game/game_board/game_board/gui/gui/alert"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_font_sizes/bold_italics_font_size = 48
+theme_override_font_sizes/italics_font_size = 48
+theme_override_font_sizes/mono_font_size = 48
+theme_override_font_sizes/normal_font_size = 48
+theme_override_font_sizes/bold_font_size = 48
+bbcode_enabled = true
+text = "<Alert>"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="tile_drag_layer" type="CanvasLayer" parent="game/game_board/game_board"]
 layer = 6
 follow_viewport_enabled = true
@@ -281,7 +421,6 @@ follow_viewport_enabled = true
 layer = 32
 
 [node name="menu_config" type="Control" parent="gui"]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

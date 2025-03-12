@@ -2,16 +2,13 @@
 extends Node
 
 # TODO (high priority):
-# add leaderboard
-# add title screen
+# add better random tile distribution
 # fix dragging tiles off screen places on board (make place back onto hotbor)
 # add zooming
-# add better random tile distribution
 
 # TODO (low priority);
 # add jingle particles when submitted successful
 # add confetti particles when game ends
-# add multiplier text to board texture
 
 const DEFAULT_SERVER_PORT: int = 43517
 const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"
@@ -33,7 +30,7 @@ var _game: Game = $game as Game
 const TIMEOUT: float = 300.0
 var _timeout: float = 0.0
 
-var _unsafe: bool = true
+var _unsafe: bool = false
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -67,6 +64,7 @@ func _ready() -> void:
 	if args.has("name"):
 		player_name = args["name"]
 	if args.has("unsafe"):
+		print("has unsafe arg!")
 		_unsafe = true
 	if args.has("auto-connect"):
 		auto_connect = args["auto-connect"].to_lower() == "true"

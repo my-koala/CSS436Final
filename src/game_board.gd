@@ -181,7 +181,8 @@ func _on_button_recall_pressed() -> void:
 	_game_tiles.recall_tiles()
 
 func _on_button_swap_pressed() -> void:
-	_rpc_request_swap.rpc_id(get_multiplayer_authority())
+	if multiplayer.has_multiplayer_peer():
+		_rpc_request_swap.rpc_id(get_multiplayer_authority())
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -222,6 +223,7 @@ func stop_loop() -> void:
 	_game_data.clear_all_player_tiles()
 	
 	loop_stopped.emit()
+	_game_data.end_game()
 
 func _fill_player_tiles(player_id: int) -> void:
 	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
