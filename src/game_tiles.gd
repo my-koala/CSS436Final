@@ -170,7 +170,7 @@ func _tile_drag_start(tile: Tile) -> void:
 	_player_tile_drag.reset_physics_interpolation()
 
 func _tile_drag_stop() -> void:
-	var tile_position: Vector2i = _tile_board.local_to_map(_tile_board.to_local(_player_tile_drag.global_position))
+	var tile_position: Vector2i = _tile_board.global_to_map(_player_tile_drag.global_position)
 	var tile_conflict: bool = _tile_board.has_tile_at(tile_position) || _player_tiles_board.has(tile_position)
 	var hotbar_hovered: bool = _tile_hotbar.get_global_rect().has_point(_tile_hotbar.get_global_mouse_position())
 	
@@ -193,7 +193,7 @@ func _move_tile_to_board(tile: Tile, tile_position: Vector2i) -> bool:
 	if is_instance_valid(parent):
 		parent.remove_child(tile)
 	_tile_board.add_child(tile)
-	tile.global_position = _tile_board.get_snap_position(tile_position)
+	tile.global_position = _tile_board.map_to_global(tile_position)
 	tile.reset_physics_interpolation()
 	_player_tiles_board[tile_position] = tile
 	return true

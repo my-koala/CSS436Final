@@ -1,5 +1,5 @@
 @tool
-extends TileMapLayer
+extends Node2D
 class_name TileBoard
 
 # TODO: rpcs to sync board state
@@ -18,16 +18,30 @@ class_name TileBoard
 # this will track the tile scenes
 # move the tile logic from game_board into game_tiles
 
+enum BoardMultiplier {
+	LETTER_1X,
+	LETTER_2X,
+	LETTER_3X,
+	LETTER_4X,
+	WORD_2X,
+	WORD_3X,
+	WORD_4X,
+}
+
 const TILE_PACKED_SCENE: PackedScene = preload("res://assets/tile.tscn")
 
 signal updated()
 
-signal temporary_tile_conflicted(tile: Tile)
+@onready
+var _tile_map_layer: TileMapLayer = $parallax_2d/tile_map_layer as TileMapLayer
 
 var _tiles: Dictionary[Vector2i, Tile] = {}
 
-func get_snap_position(coordinates: Vector2i) -> Vector2:
-	return global_transform * (Vector2(coordinates * tile_set.tile_size) - position)
+func global_to_map(global_pos: Vector2) -> Vector2i:
+	return _tile_map_layer.local_to_map(_tile_map_layer.to_local(global_pos))
+
+func map_to_global(coordinates: Vector2i) -> Vector2:
+	return global_transform * (Vector2(coordinates * _tile_map_layer.tile_set.tile_size) - position)
 
 #region Tiles
 
@@ -67,7 +81,7 @@ func _add_tile(coordinates: Vector2i, face: int) -> bool:
 	add_child(tile)
 	tile.face = face
 	tile.locked = true
-	tile.global_position = get_snap_position(coordinates)
+	tile.global_position = map_to_global(coordinates)
 	tile.reset_physics_interpolation()
 	
 	_tiles[coordinates] = tile
@@ -108,8 +122,6 @@ func _remove_tile(coordinates: Vector2i) -> bool:
 func _rpc_remove_tile(coordinates: Vector2i) -> void:
 	_remove_tile(coordinates)
 
-#endregion
-
 func get_tile_at(coordinates: Vector2i) -> int:
 	if _tiles.has(coordinates):
 		return _tiles[coordinates].face
@@ -124,8 +136,19 @@ func has_tile_neighor_at(coordinates: Vector2i) -> bool:
 			_tiles.has(coordinates + Vector2i.LEFT) ||
 			_tiles.has(coordinates + Vector2i.RIGHT))
 
+#endregion
+
 func is_empty() -> bool:
 	return _tiles.is_empty()
+
+@export
+var board_repeat_size: Vector2i = Vector2i(16, 16):
+	get:
+		return board_repeat_size
+	set(value):
+		board_repeat_size = value.maxi(1)
+
+var _board_multipliers: Array[Array] = []
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -133,6 +156,40 @@ func _ready() -> void:
 	
 	multiplayer.server_disconnected.connect(_on_multiplayer_server_disconnected)
 	multiplayer.peer_connected.connect(_on_multiplayer_peer_connected)
+	
+	# Initialize board multiplier 2D array.
+	_board_multipliers.resize(board_repeat_size.x)
+	for x: int in board_repeat_size.x:
+		_board_multipliers[x].resize(board_repeat_size.y)
+		for y: int in board_repeat_size.y:
+			var atlas_coords: Vector2i = _tile_map_layer.get_cell_atlas_coords(Vector2i(x, y))
+			var atlas_id: int = atlas_coords.x + (atlas_coords.y * 4)
+			match atlas_id:
+				0:
+					_board_multipliers[x][y] = BoardMultiplier.LETTER_1X
+				1:
+					_board_multipliers[x][y] = BoardMultiplier.LETTER_2X
+				2:
+					_board_multipliers[x][y] = BoardMultiplier.LETTER_3X
+				3:
+					_board_multipliers[x][y] = BoardMultiplier.LETTER_4X
+				4:
+					_board_multipliers[x][y] = BoardMultiplier.LETTER_1X
+				5:
+					_board_multipliers[x][y] = BoardMultiplier.WORD_2X
+				6:
+					_board_multipliers[x][y] = BoardMultiplier.WORD_3X
+				7:
+					_board_multipliers[x][y] = BoardMultiplier.WORD_4X
+				_:
+					_board_multipliers[x][y] = BoardMultiplier.LETTER_1X
+
+func get_board_multiplier(tile_position: Vector2i) -> BoardMultiplier:
+	var wrapped: Vector2i = Vector2i(
+		posmod(tile_position.x, _board_multipliers.size()),
+		posmod(tile_position.y, _board_multipliers[0].size())
+	)
+	return _board_multipliers[wrapped.x][wrapped.y]
 
 func _on_multiplayer_server_disconnected() -> void:
 	_clear_tiles()
