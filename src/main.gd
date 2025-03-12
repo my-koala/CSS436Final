@@ -11,7 +11,6 @@ extends Node
 # TODO (low priority);
 # add jingle particles when submitted successful
 # add confetti particles when game ends
-# add multiplier text to board texture
 
 const DEFAULT_SERVER_PORT: int = 43517
 const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"

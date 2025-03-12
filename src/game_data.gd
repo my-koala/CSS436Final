@@ -29,6 +29,8 @@ class Player:
 	var submitted: bool = true
 	var points: int = 0
 	var tiles: PackedByteArray = PackedByteArray()
+	
+	var place: int = -1
 
 signal updated()
 
@@ -375,6 +377,12 @@ func _set_player_points(player_id: int, player_points: int) -> bool:
 
 #endregion
 
+func get_player_place(player_id: int) -> int:
+	var player: Player = _get_player(player_id)
+	if !is_instance_valid(player):
+		return -1
+	return player.place
+
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
@@ -383,6 +391,27 @@ func _ready() -> void:
 	multiplayer.peer_disconnected.connect(_on_multiplayer_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_multiplayer_connected_to_server)
 	multiplayer.server_disconnected.connect(_on_multiplayer_server_disconnected)
+	
+	updated.connect(_on_updated)
+
+func _on_updated() -> void:
+	# Update player places.
+	var players_sorted: Array[Player] = [_local_player]
+	players_sorted.append_array(_remote_players)
+	players_sorted.sort_custom(_player_points_sort)
+	var place: int = -1
+	var place_points: int = 0
+	for player: Player in players_sorted:
+		if player.spectator:
+			player.place = - 1
+			continue
+		if place == -1 || player.points < place_points:
+			place += 1
+			place_points = player.points
+		player.place = place
+
+func _player_points_sort(a: Player, b: Player) -> bool:
+	return (a.points > b.points)
 
 func _on_multiplayer_peer_connected(player_id: int) -> void:
 	if is_multiplayer_authority():
