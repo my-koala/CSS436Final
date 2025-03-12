@@ -122,6 +122,8 @@ func start_loop(turn_count: int = DEFAULT_TURN_COUNT, turn_time: float = DEFAULT
 	_turn_time = 0.0
 	_turn_time_max = turn_time
 	
+	_game_data.clear_all_player_points()
+	
 	next_turn()
 
 func next_turn() -> void:
@@ -132,6 +134,7 @@ func next_turn() -> void:
 	# NOTE: players dont set submit at all, only server
 	# server game board submit passes submission, then sets submit and notifies all peers
 	_game_data.set_all_players_submitted(false)
+	
 	_rpc_set_turn_count.rpc(_turn_count, _turn_count_max)
 	_rpc_set_turn_time.rpc(_turn_time, _turn_time_max)
 	
