@@ -62,7 +62,10 @@ func _ready() -> void:
 	var auto_connect: bool = true
 	var address: String = DEFAULT_SERVER_ADDRESS
 	var port: int = DEFAULT_SERVER_PORT
+	var player_name: String = ""
 	
+	if args.has("name"):
+		player_name = args["name"]
 	if args.has("unsafe"):
 		_unsafe = true
 	if args.has("auto-connect"):
@@ -71,6 +74,9 @@ func _ready() -> void:
 		address = args["address"]
 	if args.has("server"):
 		server = true
+	
+	if !player_name.is_empty():
+		_menu_config.set_player_name(player_name)
 	
 	if server:
 		if !_game.start_server(port, true, "Host"):

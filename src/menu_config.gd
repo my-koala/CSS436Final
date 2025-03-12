@@ -38,6 +38,9 @@ var _auto_connect: bool = false
 func get_player_name() -> String:
 	return _name_line_edit.text
 
+func set_player_name(player_name: String) -> void:
+	_name_line_edit.text = player_name
+
 func get_network_address() -> String:
 	return _network_line_edit_address.text
 
