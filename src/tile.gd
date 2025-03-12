@@ -36,27 +36,35 @@ var _label_face: Label = $display/label_face as Label
 @onready
 var _label_points: Label = $display/label_points as Label
 
+static var _random: RandomNumberGenerator = RandomNumberGenerator.new()
+
+const FACE_POINTS: PackedInt32Array = [
+	01, 03, 03, 02,# A B C D
+	01, 05, 02, 05,# E F G H
+	01, 07, 07, 02,# I J K L
+	03, 03, 01, 03,# M N O P
+	10, 01, 01, 01,# Q R S T
+	01, 05, 05, 07,# U V W X
+	05, 10,        # Y Z
+]
+const FACE_WEIGHTS: PackedFloat32Array = [
+	2.0, 1.2, 1.2, 1.5,# A B C D
+	2.0, 0.7, 1.5, 0.7,# E F G H
+	2.0, 0.3, 0.3, 1.5,# I J K L
+	1.2, 1.2, 2.0, 1.2,# M N O P
+	0.1, 2.0, 2.0, 2.0,# Q R S T
+	2.0, 0.7, 0.7, 0.3,# U V W X
+	0.7, 0.1,          # Y Z
+]
+
 static func get_face_points(tile_face: int) -> int:
-	match tile_face:
-		0, 4, 8, 14, 20, 18, 19, 21: # A, E, I, O, U, L, N, S, T, R
-			return 1
-		3, 6: # D, G
-			return 2
-		1, 2, 11, 12, 13, 15: # B, C, L, M, N, P
-			return 3
-		5, 7, 17, 22, 24: # F, H, V, W, Y
-			return 5
-		9, 10, 23: # J, K, X
-			return 7
-		16, 25: # Q, Z
-			return 10
-	return -1
+	return FACE_POINTS[tile_face]
 
 static func get_face_string(tile_face: int) -> String:
 	return String.chr(tile_face + FACE_UNICODE_OFFSET)
 
 static func get_random_face() -> int:
-	return randi_range(FACE_MIN, FACE_MAX)
+	return _random.rand_weighted(FACE_WEIGHTS)
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
