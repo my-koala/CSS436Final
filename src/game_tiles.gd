@@ -133,7 +133,6 @@ func _physics_process(delta: float) -> void:
 		if !_input_mouse:
 			# Stop tile drag.
 			_tile_drag_stop()
-			
 	elif _input_mouse_event:
 		# Check for tile hover over hotbar.
 		if !is_dragging_tile():
@@ -173,8 +172,9 @@ func _tile_drag_stop() -> void:
 	var tile_position: Vector2i = _tile_board.global_to_map(_player_tile_drag.global_position)
 	var tile_conflict: bool = _tile_board.has_tile_at(tile_position) || _player_tiles_board.has(tile_position)
 	var hotbar_hovered: bool = _tile_hotbar.get_global_rect().has_point(_tile_hotbar.get_global_mouse_position())
+	var viewport_check: bool = get_viewport().get_visible_rect().has_point(get_viewport().get_mouse_position())
 	
-	if tile_conflict || hotbar_hovered:
+	if tile_conflict || hotbar_hovered || !viewport_check:
 		_move_tile_to_hotbar(_player_tile_drag)
 	else:
 		_move_tile_to_board(_player_tile_drag, tile_position)

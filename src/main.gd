@@ -2,11 +2,9 @@
 extends Node
 
 # TODO (high priority):
-# add leaderboard
-# add title screen
+# add better random tile distribution
 # fix dragging tiles off screen places on board (make place back onto hotbor)
 # add zooming
-# add better random tile distribution
 
 # TODO (low priority);
 # add jingle particles when submitted successful
