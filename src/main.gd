@@ -32,7 +32,7 @@ var _game: Game = $game as Game
 const TIMEOUT: float = 300.0
 var _timeout: float = 0.0
 
-var _unsafe: bool = true
+var _unsafe: bool = false
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
