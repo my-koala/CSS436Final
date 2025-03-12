@@ -213,10 +213,11 @@ func _set_player_spectator(player_id: int, player_spectator: bool) -> bool:
 #region Player Submit
 
 func get_all_players_submitted() -> bool:
-	if !_local_player.spectator && !_local_player.submitted:
+	# If a player has just joined from spectators, their tiles will be empty.
+	if !_local_player.spectator && !_local_player.submitted && !_local_player.tiles.is_empty():
 		return false
 	for remote_player: Player in _remote_players:
-		if !remote_player.spectator && !remote_player.submitted:
+		if !remote_player.spectator && !remote_player.submitted && !remote_player.tiles.is_empty():
 			return false
 	return true
 
@@ -319,6 +320,60 @@ func _set_player_tiles(player_id: int, player_tiles: PackedByteArray) -> bool:
 	return true
 
 #endregion
+#region Player Points
+
+func clear_all_player_points() -> void:
+	if multiplayer.has_multiplayer_peer():
+		if is_multiplayer_authority():
+			_clear_all_player_points()
+
+@rpc("authority", "call_remote", "reliable", 1)
+func _rpc_clear_all_player_points() -> void:
+	_clear_all_player_points()
+
+func _clear_all_player_points() -> bool:
+	_local_player.points = 0
+	for remote_player: Player in _remote_players:
+		remote_player.points = 0
+	
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		_rpc_clear_all_player_points.rpc()
+	updated.emit()
+	return true
+
+func get_local_player_points() -> int:
+	return _local_player.points
+
+func get_player_points(player_id: int) -> int:
+	var player: Player = _get_player(player_id)
+	if is_instance_valid(player):
+		return player.points
+	return -1
+
+func set_player_points(player_id: int, player_points: int) -> void:
+	if multiplayer.has_multiplayer_peer():
+		if is_multiplayer_authority():
+			_set_player_points(player_id, player_points)
+
+@rpc("authority", "call_remote", "reliable", 1)
+func _rpc_set_player_points(player_id: int, player_points: int) -> void:
+	_set_player_points(player_id, player_points)
+
+func _set_player_points(player_id: int, player_points: int) -> bool:
+	var player: Player = _get_player(player_id)
+	if !is_instance_valid(player):
+		return false
+	
+	if player.points == player_points:
+		return false
+	
+	player.points = player_points
+	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
+		_rpc_set_player_points.rpc(player_id, player_points)
+	updated.emit()
+	return true
+
+#endregion
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -337,12 +392,14 @@ func _on_multiplayer_peer_connected(player_id: int) -> void:
 		_rpc_set_player_spectator.rpc_id(player_id, _local_player.id, _local_player.spectator)
 		_rpc_set_player_submitted.rpc_id(player_id, _local_player.id, _local_player.submitted)
 		_rpc_set_player_tiles.rpc_id(player_id, _local_player.id, _local_player.tiles)
+		_rpc_set_player_points.rpc_id(player_id, _local_player.id, _local_player.points)
 		for remote_player: Player in _remote_players:
 			_rpc_set_player_name.rpc_id(player_id, remote_player.id, remote_player.name)
 			_rpc_set_player_ready.rpc_id(player_id, remote_player.id, remote_player.ready)
 			_rpc_set_player_spectator.rpc_id(player_id, remote_player.id, remote_player.spectator)
 			_rpc_set_player_submitted.rpc_id(player_id, remote_player.id, remote_player.submitted)
 			_rpc_set_player_tiles.rpc_id(player_id, remote_player.id, remote_player.tiles)
+			_rpc_set_player_points.rpc_id(player_id, remote_player.id, remote_player.points)
 	
 	var player: Player = Player.new()
 	player.id = player_id

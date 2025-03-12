@@ -34,7 +34,7 @@ var _tile_board_dirty: bool = false
 @onready
 var _tile_drag_layer: CanvasLayer = $"../tile_drag_layer" as CanvasLayer
 @onready
-var _tile_hotbar: Control = $"../gui/play/tile_hotbar" as Control
+var _tile_hotbar: Control = $"../gui/gui/tile_hotbar" as Control
 
 var _player_tile_drag: Tile = null
 var _player_tiles_hotbar: Array[Tile] = []
@@ -68,21 +68,6 @@ func decode_submission_bytes(bytes: PackedByteArray) -> Dictionary[Vector2i, int
 		submission[Vector2i(tile_position_x, tile_position_y)] = tile_face
 		index += 5
 	return submission
-
-func assign_tiles() -> void:
-	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
-		# loop through all players, fill tiles with random faces (dont bother with proper tile distributions for now)
-		for player_id: int in _game_data.get_player_ids():
-			if _game_data.get_player_spectator(player_id):
-				continue
-			print("Assigning tiles to %d." % [player_id])
-			var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
-			print("Current tiles: " + str(player_tiles))
-			while player_tiles.size() < TILE_HOTBAR_COUNT:
-				var tile_face: int = Tile.get_random_face()
-				player_tiles.append(tile_face)
-			print("After tiles: " + str(player_tiles))
-			_game_data.set_player_tiles(player_id, player_tiles)
 
 func recall_tiles() -> void:
 	var tiles: Array[Tile] = _player_tiles_board.values()
@@ -185,7 +170,7 @@ func _tile_drag_start(tile: Tile) -> void:
 	_player_tile_drag.reset_physics_interpolation()
 
 func _tile_drag_stop() -> void:
-	var tile_position: Vector2i = _tile_board.local_to_map(_tile_board.to_local(_player_tile_drag.global_position))
+	var tile_position: Vector2i = _tile_board.global_to_map(_player_tile_drag.global_position)
 	var tile_conflict: bool = _tile_board.has_tile_at(tile_position) || _player_tiles_board.has(tile_position)
 	var hotbar_hovered: bool = _tile_hotbar.get_global_rect().has_point(_tile_hotbar.get_global_mouse_position())
 	
@@ -208,7 +193,7 @@ func _move_tile_to_board(tile: Tile, tile_position: Vector2i) -> bool:
 	if is_instance_valid(parent):
 		parent.remove_child(tile)
 	_tile_board.add_child(tile)
-	tile.global_position = _tile_board.get_snap_position(tile_position)
+	tile.global_position = _tile_board.map_to_global(tile_position)
 	tile.reset_physics_interpolation()
 	_player_tiles_board[tile_position] = tile
 	return true
@@ -263,6 +248,7 @@ func _refresh_tiles() -> void:
 			if tile_check.has(tile.face):
 				tile_check.erase(tile.face)
 			else:
+				_player_tiles_board[tile_position].queue_free()
 				_player_tiles_board.erase(tile_position)
 		
 		if is_instance_valid(_player_tile_drag) && !tile_check.has(_player_tile_drag.face):
