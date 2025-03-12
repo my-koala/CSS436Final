@@ -57,6 +57,9 @@ func get_face_points() -> int:
 static func get_face_string(tile_face: int) -> String:
 	return String.chr(tile_face + FACE_UNICODE_OFFSET)
 
+static func get_random_face() -> int:
+	return randi_range(FACE_MIN, FACE_MAX)
+
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return

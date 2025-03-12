@@ -36,10 +36,9 @@ var _tile_drag_layer: CanvasLayer = $"../tile_drag_layer" as CanvasLayer
 @onready
 var _tile_hotbar: Control = $"../gui/play/tile_hotbar" as Control
 
-var _player_tiles: Array[Tile] = []
-var _player_tiles_board: Dictionary[Vector2i, Tile] = {}
-var _player_tiles_hotbar: Array[Tile] = []
 var _player_tile_drag: Tile = null
+var _player_tiles_hotbar: Array[Tile] = []
+var _player_tiles_board: Dictionary[Vector2i, Tile] = {}
 
 var _input_mouse: bool = false
 var _input_mouse_event: bool = false
@@ -76,10 +75,13 @@ func assign_tiles() -> void:
 		for player_id: int in _game_data.get_player_ids():
 			if _game_data.get_player_spectator(player_id):
 				continue
+			print("Assigning tiles to %d." % [player_id])
 			var player_tiles: Array[int] = _game_data.get_player_tiles(player_id)
+			print("Current tiles: " + str(player_tiles))
 			while player_tiles.size() < TILE_HOTBAR_COUNT:
-				var tile_face: int = randi_range(Tile.FACE_MIN, Tile.FACE_MAX)# A-Z
+				var tile_face: int = Tile.get_random_face()
 				player_tiles.append(tile_face)
+			print("After tiles: " + str(player_tiles))
 			_game_data.set_player_tiles(player_id, player_tiles)
 
 func recall_tiles() -> void:
@@ -128,8 +130,6 @@ func _physics_process(delta: float) -> void:
 	
 	for index: int in _player_tiles_hotbar.size():
 		var tile: Tile = _player_tiles_hotbar[index]
-		# TODO: Sort and position tiles by index.
-		
 		tile.global_position = _get_tile_hotbar_position(index)
 	
 	if _game_data_dirty:
@@ -141,7 +141,6 @@ func _physics_process(delta: float) -> void:
 		# Check for tile conflicts.
 		for tile_position: Vector2i in _player_tiles_board:
 			if _tile_board.has_tile_at(tile_position):
-				# TODO: Conflict found, return tile to hotbar. TODO
 				_move_tile_to_hotbar(_player_tiles_board[tile_position])
 	
 	if is_dragging_tile():
@@ -151,12 +150,20 @@ func _physics_process(delta: float) -> void:
 			_tile_drag_stop()
 			
 	elif _input_mouse_event:
-		# Check for tile hovers.
-		for tile: Tile in _player_tiles:
-			if tile.is_mouse_hovered():
-				# Start tile drag.
-				_tile_drag_start(tile)
-				break
+		# Check for tile hover over hotbar.
+		if !is_dragging_tile():
+			for tile: Tile in _player_tiles_hotbar:
+				if tile.is_mouse_hovered():
+					_tile_drag_start(tile)
+					break
+		
+		# Check for tile hover over board.
+		if !is_dragging_tile():
+			for tile_position: Vector2i in _player_tiles_board:
+				var tile: Tile = _player_tiles_board[tile_position]
+				if tile.is_mouse_hovered():
+					_tile_drag_start(tile)
+					break
 	
 	_input_mouse_event = false
 
@@ -227,53 +234,56 @@ func _move_tile_to_hotbar(tile: Tile) -> bool:
 
 func _refresh_tiles() -> void:
 	# Refresh local player tiles.
-	var player_tiles: PackedByteArray = _game_data.get_local_player_tiles()
+	var player_tiles: Array[int] = _game_data.get_local_player_tiles()
 	if player_tiles.is_empty():
-		if !_player_tiles.is_empty():
-			for tile: Tile in _player_tiles:
-				tile.queue_free()
-			_player_tiles.clear()
-	else:
-		var player_tile_faces: Array[int] = []
-		for index: int in player_tiles.size():
-			player_tile_faces.append(player_tiles.decode_u8(index))
+		for tile: Tile in _player_tiles_hotbar:
+			tile.queue_free()
+		_player_tiles_hotbar.clear()
 		
+		for tile_position: Vector2i in _player_tiles_board:
+			_player_tiles_board[tile_position].queue_free()
+		_player_tiles_board.clear()
+	else:
 		# Remove missing tiles.
 		var tiles_remove: Array[Tile] = []
-		var tile_faces_check: Array[int] = player_tile_faces
-		for tile: Tile in _player_tiles:
-			if tile_faces_check.has(tile.face):
-				tile_faces_check.erase(tile.face)
-			else:
-				tiles_remove.append(tile)
+		var tile_check: Array[int] = player_tiles.duplicate()
 		
-		for tile: Tile in tiles_remove:
-			_player_tiles.erase(tile)
-			for coordinates: Vector2i in _player_tiles_board:
-				if _player_tiles_board[coordinates] == tile:
-					_player_tiles_board.erase(coordinates)
-					break
-			if _player_tiles_hotbar.has(tile):
-				_player_tiles_hotbar.erase(tile)
-			if _player_tile_drag == tile:
-				_player_tile_drag = null
-			tile.queue_free()
+		var index: int = 0
+		while index < _player_tiles_hotbar.size():
+			var tile: Tile = _player_tiles_hotbar[index]
+			if tile_check.has(tile.face):
+				tile_check.erase(tile.face)
+				index += 1
+			else:
+				_player_tiles_hotbar.remove_at(index)
+				tile.queue_free()
+		
+		for tile_position: Vector2i in _player_tiles_board.keys():
+			var tile: Tile = _player_tiles_board[tile_position]
+			if tile_check.has(tile.face):
+				tile_check.erase(tile.face)
+			else:
+				_player_tiles_board.erase(tile_position)
+		
+		if is_instance_valid(_player_tile_drag) && !tile_check.has(_player_tile_drag.face):
+			_player_tile_drag.queue_free()
+			_player_tile_drag = null
 		
 		# Create remaining tiles.
-		tile_faces_check = []
-		for tile: Tile in _player_tiles:
-			tile_faces_check.append(tile.face)
+		tile_check.clear()
+		for tile: Tile in _player_tiles_hotbar:
+			tile_check.append(tile.face)
 		
-		var tile_faces_add: Array[int] = []
+		for tile_position: Vector2i in _player_tiles_board:
+			tile_check.append(_player_tiles_board[tile_position].face)
 		
-		for tile_face: int in player_tile_faces:
-			if tile_faces_check.has(tile_face):
-				tile_faces_check.erase(tile_face)
+		if is_instance_valid(_player_tile_drag):
+			tile_check.append(_player_tile_drag.face)
+		
+		for player_tile: int in player_tiles:
+			if tile_check.has(player_tile):
+				tile_check.erase(player_tile)
 			else:
-				tile_faces_add.append(tile_face)
-		
-		for tile_face: int in tile_faces_add:
-			var tile: Tile = TILE_PACKED_SCENE.instantiate() as Tile
-			tile.face = tile_face
-			_player_tiles.append(tile)
-			_move_tile_to_hotbar(tile)
+				var tile: Tile = TILE_PACKED_SCENE.instantiate() as Tile
+				tile.face = player_tile
+				_move_tile_to_hotbar(tile)
