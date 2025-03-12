@@ -36,24 +36,26 @@ var _label_face: Label = $display/label_face as Label
 @onready
 var _label_points: Label = $display/label_points as Label
 
-# TODO: probably a big match statement
 func get_face_points() -> int:
 	match face:
-		0 | 4 | 8 | 14 | 20 | 18 | 19 | 21:  # A, E, I, O, U, L, N, S, T, R
+		0, 4, 8, 14, 20, 18, 19, 21: # A, E, I, O, U, L, N, S, T, R
 			return 2
-		3 | 6:  # D, G
+		3, 6: # D, G
 			return 3
-		1 | 2 | 12 | 15:  # B, C, M, P
+		1, 2, 11, 12, 13, 15: # B, C, L, M, N, P
 			return 4
-		5 | 7 | 17 | 22 | 24:  # F, H, V, W, Y
+		5, 7, 17, 22, 24: # F, H, V, W, Y
 			return 5
-		10:  # K
+		10: # K
 			return 6
-		9 | 23:  # J, X
+		9, 23: # J, X
 			return 9
-		16 | 25:  # Q, Z
+		16, 25: # Q, Z
 			return 11
-	return 0  # Default case
+	return 0 # Default case
+
+static func get_face_string(tile_face: int) -> String:
+	return String.chr(tile_face + FACE_UNICODE_OFFSET)
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -76,7 +78,7 @@ func _process(delta: float) -> void:
 		modulate = Color.WHITE
 	else:
 		modulate = locked_modulate
-	_label_face.text = String.chr(face + FACE_UNICODE_OFFSET)
+	_label_face.text = get_face_string(face)
 	_label_points.text = str(get_face_points())
 
 func _physics_process(delta: float) -> void:

@@ -110,8 +110,10 @@ func _rpc_remove_tile(coordinates: Vector2i) -> void:
 
 #endregion
 
-func get_tile_at(coordinates: Vector2i) -> Tile:
-	return _tiles[coordinates]
+func get_tile_at(coordinates: Vector2i) -> int:
+	if _tiles.has(coordinates):
+		return _tiles[coordinates].face
+	return -1
 
 func has_tile_at(coordinates: Vector2i) -> bool:
 	return _tiles.has(coordinates)
