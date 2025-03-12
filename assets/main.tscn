@@ -219,7 +219,7 @@ metadata/_custom_type_script = "uid://b2ot00vang7bj"
 [node name="parallax_2d" type="Parallax2D" parent="game/game_board/game_board/tile_board"]
 z_index = -128
 repeat_size = Vector2(2048, 2048)
-repeat_times = 4
+repeat_times = 16
 
 [node name="tile_map_layer" type="TileMapLayer" parent="game/game_board/game_board/tile_board/parallax_2d"]
 y_sort_enabled = true

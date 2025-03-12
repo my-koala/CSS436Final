@@ -1,14 +1,8 @@
 @tool
 extends Node
 
-# TODO (high priority):
-# add better random tile distribution
-# fix dragging tiles off screen places on board (make place back onto hotbor)
-# add zooming
-
-# TODO (low priority);
-# add jingle particles when submitted successful
-# add confetti particles when game ends
+# TODO (low priority):
+# add azure functions to boot server?
 
 const DEFAULT_SERVER_PORT: int = 43517
 const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"

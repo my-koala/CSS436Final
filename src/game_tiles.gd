@@ -165,7 +165,8 @@ func _tile_drag_start(tile: Tile) -> void:
 	if is_instance_valid(parent):
 		parent.remove_child(tile)
 	_tile_drag_layer.add_child(_player_tile_drag)
-	_player_tile_drag.global_position = get_viewport().get_mouse_position() * _tile_drag_layer.get_final_transform()
+	#_player_tile_drag.global_position = get_viewport().get_mouse_position() * _tile_drag_layer.get_final_transform()
+	_player_tile_drag.global_position = _player_tile_drag.get_global_mouse_position()
 	_player_tile_drag.reset_physics_interpolation()
 
 func _tile_drag_stop() -> void:
