@@ -528,7 +528,7 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 		_tile_board.add_tile(coordinates, face)
 	
 	_game_data.set_player_tiles(player_id, player_tiles)
-	_game_data.set_player_points(player_id, points)
+	_game_data.set_player_points(player_id, _game_data.get_player_points(player_id) + points)
 	_game_data.set_player_submitted(player_id, true)
 	
 	_fill_player_tiles(player_id)
