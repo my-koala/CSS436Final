@@ -154,8 +154,9 @@ func join_server(address: String = "127.0.0.1", port: int = 4000, unsafe: bool =
 	else:
 		print("Network (Client) | Loaded certificate.")
 	
+	var offline: bool = (address == "127.0.0.1") || (address == "localhost")
 	var tls_options: TLSOptions
-	if unsafe || !is_instance_valid(certificate):
+	if offline || unsafe || !is_instance_valid(certificate):
 		print("Network (Client) | Joining server without custom certificate.")
 		tls_options = null
 	else:
@@ -166,7 +167,7 @@ func join_server(address: String = "127.0.0.1", port: int = 4000, unsafe: bool =
 	var multiplayer_peer: WebSocketMultiplayerPeer = WebSocketMultiplayerPeer.new()
 	
 	var url: String = "wss://" + address + ":" + str(port)
-	if unsafe:
+	if unsafe || offline || !is_instance_valid(tls_options):
 		url = address + ":" + str(port)
 	var error: Error = multiplayer_peer.create_client(url, tls_options)
 	if error != OK:

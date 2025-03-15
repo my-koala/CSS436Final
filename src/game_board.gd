@@ -242,7 +242,7 @@ var _player_submission_processing: bool = false
 # tile_pos_x: 2 bytes (16 bit signed int)
 # tile_pos_y: 2 bytes (16 bit signed int)
 # tile_face: 1 byte (8 bit unsigned int)
-@rpc("any_peer", "call_remote", "reliable", 0)
+@rpc("any_peer", "call_local", "reliable", 0)
 func _rpc_request_submit(bytes: PackedByteArray) -> void:
 	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
 		var player_id: int = multiplayer.get_remote_sender_id()
@@ -259,7 +259,7 @@ func _rpc_request_submit(bytes: PackedByteArray) -> void:
 		_player_submission_ids.append(player_id)
 		_player_submission_processes.append(_validate_submission.bind(player_id, player_submission))
 
-@rpc("any_peer", "call_remote", "reliable", 0)
+@rpc("any_peer", "call_local", "reliable", 0)
 func _rpc_request_swap() -> void:
 	if multiplayer.has_multiplayer_peer() && is_multiplayer_authority():
 		var player_id: int = multiplayer.get_remote_sender_id()
@@ -313,7 +313,7 @@ func _physics_process(delta: float) -> void:
 				# Out of turns, end the game loop.
 				stop_loop()
 
-@rpc("authority", "call_remote", "reliable", 0)
+@rpc("authority", "call_local", "reliable", 0)
 func _rpc_submit_result(submission_result: SubmissionResult, points: int = 0) -> void:
 	var submission_result_message: String = get_submission_result_message(submission_result)
 	_gui_alert_label.text = ""
@@ -340,6 +340,7 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 		_rpc_submit_result.rpc_id(player_id, SubmissionResult.ALREADY_SUBMITTED)
 		return SubmissionResult.ALREADY_SUBMITTED
 	
+	print("processing")
 	# Empty submissions are invalid.
 	if submission.is_empty():
 		_rpc_submit_result.rpc_id(player_id, SubmissionResult.EMPTY_SUBMISSION)
@@ -518,7 +519,7 @@ func _validate_submission(player_id: int, submission: Dictionary[Vector2i, int])
 			return SubmissionResult.INVALID_WORD
 	
 	# Time out in case disconnection has happened since word check.
-	if !multiplayer.has_multiplayer_peer() || !multiplayer.get_peers().has(player_id):
+	if !multiplayer.has_multiplayer_peer() || !_game_data.get_player_ids().has(player_id):
 		return SubmissionResult.TIMED_OUT
 	
 	# Submission passed all checks!

@@ -556,6 +556,10 @@ max_length = 10
 context_menu_enabled = false
 emoji_menu_enabled = false
 
+[node name="button_host" type="Button" parent="gui/menu_config/network/v_box_container"]
+layout_mode = 2
+text = "Host Server"
+
 [node name="button_join" type="Button" parent="gui/menu_config/network/v_box_container"]
 layout_mode = 2
 text = "Join Server"

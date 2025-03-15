@@ -4,6 +4,9 @@ extends Node
 # TODO (low priority):
 # add azure functions to boot server?
 
+# TODO:
+# pass args to engine via html
+
 const DEFAULT_SERVER_PORT: int = 43517
 const DEFAULT_SERVER_ADDRESS: String = "wordwarzero.westus2.cloudapp.azure.com"
 
@@ -30,6 +33,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	
+	_menu_config.network_host_request.connect(_on_menu_config_network_host_request)
 	_menu_config.network_join_request.connect(_on_menu_config_network_join_request)
 	
 	_game.server_started.connect(_on_game_server_started)
@@ -94,6 +98,9 @@ func _on_game_client_stopped() -> void:
 
 func _on_menu_config_network_join_request() -> void:
 	_game.start_client(_menu_config.get_network_address(), _menu_config.get_network_port(), _menu_config.get_player_name(), _unsafe)
+
+func _on_menu_config_network_host_request() -> void:
+	_game.start_server(_menu_config.get_network_port(), false)
 
 func set_state(state: State) -> void:
 	_state = state

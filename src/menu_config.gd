@@ -3,6 +3,7 @@ extends Control
 class_name MenuConfig
 
 signal player_name_submitted(player_name: String)
+signal network_host_request()
 signal network_join_request()
 
 enum State {
@@ -25,6 +26,8 @@ var _network: Control = $network as Control
 var _network_label_status: Label = $network/label_status as Label
 @onready
 var _network_v_box_container: VBoxContainer = $network/v_box_container as VBoxContainer
+@onready
+var _network_button_host: Button = $network/v_box_container/button_host as Button
 @onready
 var _network_button_join: Button = $network/v_box_container/button_join as Button
 @onready
@@ -57,6 +60,7 @@ func _ready() -> void:
 		return
 	
 	_name_button_submit.pressed.connect(_on_name_button_submit_pressed)
+	_network_button_host.pressed.connect(_on_network_button_host_pressed)
 	_network_button_join.pressed.connect(_on_network_button_join_pressed)
 	
 	set_state(State.NONE)
@@ -72,9 +76,10 @@ func _on_join_line_edit_port_text_changed(new_text: String) -> void:
 	else:
 		_network_line_edit_port_text = _network_line_edit_port.text
 
+func _on_network_button_host_pressed() -> void:
+	network_host_request.emit()
+
 func _on_network_button_join_pressed() -> void:
-	var address: String = _network_line_edit_address.text
-	var port: int = _network_line_edit_port.text.to_int()
 	network_join_request.emit()
 
 func set_state(state: State) -> void:
